@@ -55,19 +55,29 @@ void decodeLoop()
     u8 *buf = malloc(BUF_SIZE);
     u8 *byteStrm = buf;
 
-    u32 readBytes;
-    int numPics = 0;
-    u32 *pic;
-    u32 picId, isIdrPic, numErrMbs;
-    u32 top, left, width, height, croppingFlag;
 
+    printf("Trying to listen!\n");    
+    int listenfd = setupServerSocket();
+        
+    int c = sizeof(struct sockaddr_in);
+    struct sockaddr_in client;
+    
     while (appletMainLoop())
     {
+        u32 readBytes;
+        int numPics = 0;
+        u32 *pic;
+        u32 picId, isIdrPic, numErrMbs;
+        u32 top, left, width, height, croppingFlag;
 
-        int listenfd = setupServerSocket();
-        int c = sizeof(struct sockaddr_in);
-        struct sockaddr_in client;
+        printf("Trying to accept!\n");
         int sock = accept(listenfd, (struct sockaddr *)&client, (socklen_t *)&c);
+        if(sock < 0) {
+            printf("Accepting failed!\n");
+            close(listenfd);
+            listenfd = setupServerSocket();
+            continue;
+        }
         printf("Got connection!\n");
 
         u32 status;
@@ -95,8 +105,9 @@ void decodeLoop()
             }
 
             int recvlen = recv(sock, byteStrm + len, LEN_SIZE, 0);
-            if (recvlen < 0)
+            if (recvlen <= 0)
             {
+                printf("Recv failed!\nConnection close?\n");
                 break;
             }
 
@@ -167,8 +178,8 @@ void decodeLoop()
         h264bsdShutdown(&dec);
 
         close(sock);
-        close(listenfd);
     }
+    close(listenfd);
 }
 
 #define CLOCK_RATE 1785000000
