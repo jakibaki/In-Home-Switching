@@ -50,25 +50,10 @@ u32 fbwidth, fbheight;
 u8 *fakebuf[RESX * RESY * 4] = {0};
 static Mutex fbMut;
 
-
 void decodeLoop()
 {
-    int listenfd = setupServerSocket();
-    int c = sizeof(struct sockaddr_in);
-    struct sockaddr_in client;
-    int sock = accept(listenfd, (struct sockaddr *)&client, (socklen_t *)&c);
-    printf("Got connection!\n");
-
-    u32 status;
-    storage_t dec;
-    status = h264bsdInit(&dec, 1);
-
-    if (status != HANTRO_OK)
-    {
-        fprintf(stderr, "h264bsdInit failed\n");
-        while (1)
-            ;
-    }
+    u8 *buf = malloc(BUF_SIZE);
+    u8 *byteStrm = buf;
 
     u32 readBytes;
     int numPics = 0;
@@ -76,80 +61,113 @@ void decodeLoop()
     u32 picId, isIdrPic, numErrMbs;
     u32 top, left, width, height, croppingFlag;
 
-    u8 *buf = malloc(BUF_SIZE);
-    u8 *byteStrm = buf;
-    int len = 0;
-
     while (appletMainLoop())
     {
 
-        // If our buffer begins to run full we want to move stuff to the front
-        if (BUF_SIZE - (byteStrm - buf) - len < LEN_SIZE)
+        int listenfd = setupServerSocket();
+        int c = sizeof(struct sockaddr_in);
+        struct sockaddr_in client;
+        int sock = accept(listenfd, (struct sockaddr *)&client, (socklen_t *)&c);
+        printf("Got connection!\n");
+
+        u32 status;
+        storage_t dec;
+        status = h264bsdInit(&dec, 1);
+
+        if (status != HANTRO_OK)
         {
-            // Copy the rest to the start of the buffer and set the byteStrm back to the beginning too
-            memcpy(buf, byteStrm, BUF_SIZE - (byteStrm - buf) + len);
-            byteStrm = buf;
+            fprintf(stderr, "h264bsdInit failed\n");
+            while (1)
+                ;
         }
 
-        len += recv(sock, byteStrm + len, LEN_SIZE, 0);
+        int len = 0;
 
-        // Waiting for the network to get enough data to decode stuff
-        u8 done_data = 0;
-        // TODO: No need to check the whole buffer every loop
-        for (int i = 4; i < len - 4; i++)
+        while (appletMainLoop())
         {
-            if ((*((unsigned int *)(byteStrm + len - i)) & MAGIC_MASK) == MAGIC) // When it finds the magic the fun is over.
+
+            // If our buffer begins to run full we want to move stuff to the front
+            if (BUF_SIZE - (byteStrm - buf) - len < LEN_SIZE)
             {
-                done_data = 1;
+                // Copy the rest to the start of the buffer and set the byteStrm back to the beginning too
+                memcpy(buf, byteStrm, BUF_SIZE - (byteStrm - buf) + len);
+                byteStrm = buf;
+            }
+
+            int recvlen = recv(sock, byteStrm + len, LEN_SIZE, 0);
+            if (recvlen < 0)
+            {
                 break;
             }
-        }
-        if (!done_data)
-            continue;
 
-        u32 result = h264bsdDecode(&dec, byteStrm, len, 0, &readBytes);
-        len -= readBytes;
-        byteStrm += readBytes;
+            len += recvlen;
 
-        switch (result)
-        {
-        case H264BSD_PIC_RDY:
-            pic = h264bsdNextOutputPicture(&dec, &picId, &isIdrPic, &numErrMbs);
-
-            mutexLock(&fbMut);
-            memcpy(fakebuf, pic, fbwidth * fbheight * 4);
-            mutexUnlock(&fbMut);
-
-            if (++numPics % 60 == 0)
-                printf("%d\n", numPics);
-
-            break;
-        case H264BSD_HDRS_RDY:
-            h264bsdCroppingParams(&dec, &croppingFlag, &left, &width, &top, &height);
-            if (!croppingFlag)
+            // Waiting for the network to get enough data to decode stuff
+            u8 done_data = 0;
+            // TODO: No need to check the whole buffer every loop
+            for (int i = 4; i < len - 4; i++)
             {
-                width = h264bsdPicWidth(&dec) * 16;
-                height = h264bsdPicHeight(&dec) * 16;
+                if ((*((unsigned int *)(byteStrm + len - i)) & MAGIC_MASK) == MAGIC) // When it finds the magic the fun is over.
+                {
+                    done_data = 1;
+                    break;
+                }
             }
-            else
+            if (!done_data)
+                continue;
+
+            u32 result = h264bsdDecode(&dec, byteStrm, len, 0, &readBytes);
+            len -= readBytes;
+            byteStrm += readBytes;
+
+            char shouldCont = 1;
+            switch (result)
             {
-                fprintf(stderr, "Uhm, cropping flag set, panic!!!\n");
-                while (1)
-                    ;
+            case H264BSD_PIC_RDY:
+                pic = h264bsdNextOutputPicture(&dec, &picId, &isIdrPic, &numErrMbs);
+
+                mutexLock(&fbMut);
+                memcpy(fakebuf, pic, fbwidth * fbheight * 4);
+                mutexUnlock(&fbMut);
+
+                if (++numPics % 60 == 0)
+                    printf("%d\n", numPics);
+
+                break;
+            case H264BSD_HDRS_RDY:
+                h264bsdCroppingParams(&dec, &croppingFlag, &left, &width, &top, &height);
+                if (!croppingFlag)
+                {
+                    width = h264bsdPicWidth(&dec) * 16;
+                    height = h264bsdPicHeight(&dec) * 16;
+                }
+                else
+                {
+                    fprintf(stderr, "Uhm, cropping flag set, panic!!!\n");
+                    shouldCont = 0;
+                    break;
+                }
+                printf("Decoded headers. Image size %dx%d\n", width, height);
+                break;
+            case H264BSD_RDY:
+                break;
+            case H264BSD_ERROR:
+                fprintf(stderr, "Error\n");
+                shouldCont = 0;
+                break;
+            case H264BSD_PARAM_SET_ERROR:
+                fprintf(stderr, "Param set error\n");
+                shouldCont = 0;
+                break;
             }
-            printf("Decoded headers. Image size %dx%d\n", width, height);
-            break;
-        case H264BSD_RDY:
-            break;
-        case H264BSD_ERROR:
-            fprintf(stderr, "Error\n");
-            while (1)
-                ;
-        case H264BSD_PARAM_SET_ERROR:
-            fprintf(stderr, "Param set error\n");
-            while (1)
-                ;
+            if (!shouldCont)
+                break;
         }
+
+        h264bsdShutdown(&dec);
+
+        close(sock);
+        close(listenfd);
     }
 }
 
