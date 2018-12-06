@@ -36,7 +36,7 @@ SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=	include
 EXEFS_SRC	:=	exefs_src
-ROMFS	:=	romfs
+#ROMFS	:=	romfs
 
 #---------------------------------------------------------------------------------
 # options for code generation
