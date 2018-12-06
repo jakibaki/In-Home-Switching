@@ -14,28 +14,14 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
+#include "util.h"
+#include "gamepad.h"
+
 #define _ERROR_PRINT
-#include "h264bsd_decoder.h"
-#include "h264bsd_util.h"
+#include "h264/h264bsd_decoder.h"
+#include "h264/h264bsd_util.h"
 
 #include <switch.h>
-
-int setupServerSocket()
-{
-    int lissock;
-    struct sockaddr_in server;
-    lissock = socket(AF_INET, SOCK_STREAM, 0);
-    server.sin_family = AF_INET;
-    server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons(6543);
-
-    while (bind(lissock, (struct sockaddr *)&server, sizeof(server)) < 0)
-    {
-        svcSleepThread(1e+9L);
-    }
-    listen(lissock, 3);
-    return lissock;
-}
 
 #define MAGIC 0x010000 // "flipped" due to little endian
 #define MAGIC_MASK 0x00FFFFFF
@@ -56,9 +42,10 @@ void decodeLoop()
     u8 *byteStrm = buf;
 
 
-    printf("Trying to listen!\n");    
-    int listenfd = setupServerSocket();
-        
+    printf("Decoder: Trying to listen!\n");    
+    int listenfd = setupServerSocket(6543);
+    printf("Decoder: Can listen!\n");
+
     int c = sizeof(struct sockaddr_in);
     struct sockaddr_in client;
     
@@ -75,7 +62,7 @@ void decodeLoop()
         if(sock < 0) {
             printf("Accepting failed!\n");
             close(listenfd);
-            listenfd = setupServerSocket();
+            listenfd = setupServerSocket(6543);
             continue;
         }
         printf("Got connection!\n");
@@ -208,22 +195,38 @@ int main(int argc, char **argv)
     //socketInitializeDefault();
 
     nxlinkStdio();
+
     gfxInitDefault();
     mutexInit(&fbMut);
 
+
     Thread decodeThread;
-    threadCreate(&decodeThread, decodeLoop, NULL, 0x5000, 0x3B, 2);
+    threadCreate(&decodeThread, decodeLoop, NULL, 0x5000, 0x2C, 2);
     threadStart(&decodeThread);
+
+
+    int c = sizeof(struct sockaddr_in);
+    struct sockaddr_in client;
+
+    int listenfd = setupServerSocket(6544);
+    int sock = accept(listenfd, (struct sockaddr *)&client, (socklen_t *)&c);
 
     while (appletMainLoop())
     {
         u8 *fb = gfxGetFramebuffer(&fbwidth, &fbheight);
         mutexLock(&fbMut);
-        //memcpy(fb, fakebuf, RESX * RESY * 4);
         h264bsdConvertToRGBA(RESX, RESY, fakebuf, fb);
         mutexUnlock(&fbMut);
+
+        if(gamePadSend(sock) != 0) {
+            sock = accept(listenfd, (struct sockaddr *)&client, (socklen_t *)&c);
+        }
+
+
         gfxFlushBuffers();
         gfxSwapBuffers();
+
+
     }
 
     consoleExit(NULL);
