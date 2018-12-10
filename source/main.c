@@ -34,6 +34,8 @@
 #include <libavutil/samplefmt.h>
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
+
 #include <switch.h>
 
 static AVFormatContext *fmt_ctx = NULL;
@@ -46,11 +48,12 @@ static int video_dst_linesize[4];
 static int video_dst_bufsize;
 static int video_stream_idx = -1, audio_stream_idx = -1;
 static AVFrame *frame = NULL;
+static AVFrame *rgbframe = NULL;
+static struct SwsContext *ctx_sws = NULL;
 static AVPacket pkt;
 static int video_frame_count = 0;
 static int audio_frame_count = 0;
 
-static FILE *video_dst_file;
 
 /*Enable or disable frame reference counting. You are not supposed to support
 * both paths in your application but pick the one most appropriate to your
@@ -59,22 +62,27 @@ static FILE *video_dst_file;
 */
 static int refcount = 0;
 
-static int decode_packet(int* got_frame, int cached) {
+static int decode_packet(int *got_frame, int cached)
+{
     int ret = 0;
     int decoded = pkt.size;
     *got_frame = 0;
-    if (pkt.stream_index == video_stream_idx) {
+    if (pkt.stream_index == video_stream_idx)
+    {
         //decode video frame
 
         // deprecated --> use avcodec_send_packet() and avcodec_receive_frame() instead?
         ret = avcodec_decode_video2(video_dec_ctx, frame, got_frame, &pkt);
-        if (ret < 0) {
+        if (ret < 0)
+        {
             fprintf(stderr, "Error decoding video frame (%s)\n", av_err2str(ret));
             return ret;
         }
-        if (*got_frame) {
+        if (*got_frame)
+        {
             if (frame->width != width || frame->height != height ||
-                frame->format != pix_fmt) {
+                frame->format != pix_fmt)
+            {
                 /*
                  To handle this change, one could call av_image_alloc again and
                                  * decode the following frames into another rawvideo file.
@@ -90,9 +98,25 @@ static int decode_packet(int* got_frame, int cached) {
                         av_get_pix_fmt_name(frame->format));
                 return -1;
             }
-            printf("video_frame%s n:%d coded_n:%d\n",
-                   cached ? "(cached)" : "",
-                   video_frame_count++, frame->coded_picture_number);
+            //printf("video_frame%s n:%d coded_n:%d\n",
+            //       cached ? "(cached)" : "",
+            //       video_frame_count++, frame->coded_picture_number);
+            if (++video_frame_count % 60 == 0)
+            {
+                printf("%d\n", video_frame_count);
+            }
+
+            if (ctx_sws == NULL)
+                ctx_sws = sws_getContext(frame->width, frame->height, pix_fmt, frame->width, frame->height, AV_PIX_FMT_RGBA, SWS_BILINEAR, 0, 0, 0);
+
+            u8 *fbuf = gfxGetFramebuffer(NULL, NULL);
+            
+
+            sws_scale(ctx_sws, frame->data, frame->linesize, 0, frame->height, &fbuf, rgbframe->linesize);
+
+            //memcpy(fbuf, rgbframe->data[0], 1280 * 720 * 4);
+            gfxFlushBuffers();
+            gfxSwapBuffers();
             /*
              copy decoded frame to destination buffer:
                          * this is required since rawvideo expects non aligned data
@@ -102,7 +126,7 @@ static int decode_packet(int* got_frame, int cached) {
             //av_image_copy(video_dst_data, video_dst_linesize,
             //              (const uint8_t **) (frame->data), frame->linesize,
             //              pix_fmt, width, height);
-            
+
             //write to rawvideo file
 
             //fwrite(video_dst_data[0], 1, video_dst_bufsize, video_dst_file);
@@ -112,52 +136,60 @@ static int decode_packet(int* got_frame, int cached) {
 }
 
 static int open_codec_context(int *stream_idx,
-                              AVCodecContext **dec_ctx, AVFormatContext *fmt_ctx, enum AVMediaType type) {
+                              AVCodecContext **dec_ctx, AVFormatContext *fmt_ctx, enum AVMediaType type)
+{
     int ret, stream_index;
     AVStream *st;
     AVCodec *dec = NULL;
     AVDictionary *opts = NULL;
     ret = av_find_best_stream(fmt_ctx, type, -1, -1, NULL, 0);
-    if (ret < 0) {
+    if (ret < 0)
+    {
         fprintf(stderr, "Could not find %s stream in input file \n",
                 av_get_media_type_string(type));
         return ret;
-    } else {
+    }
+    else
+    {
         stream_index = ret;
         st = fmt_ctx->streams[stream_index];
         /*find decoder for the stream*/
 
         dec = avcodec_find_decoder(st->codecpar->codec_id);
-        if (!dec) {
+        if (dec == NULL)
+        {
             fprintf(stderr, "Failed to find %s codec\n",
                     av_get_media_type_string(type));
             return AVERROR(EINVAL);
         }
-/*
+        /*
         Allocate a codec context for the decoder
 */
 
         *dec_ctx = avcodec_alloc_context3(dec);
-        if (!*dec_ctx) {
+        if (*dec_ctx == NULL)
+        {
             fprintf(stderr, "Failed to allocate the %s codec context\n",
                     av_get_media_type_string(type));
             return AVERROR(ENOMEM);
         }
-/*
+        /*
         Copy codec parameters from input stream to output codec context
-*/
+        */
 
-        if ((ret = avcodec_parameters_to_context(*dec_ctx, st->codecpar)) < 0) {
+        if ((ret = avcodec_parameters_to_context(*dec_ctx, st->codecpar)) < 0)
+        {
             fprintf(stderr, "Failed to copy %s codec parameters to decoder context\n",
                     av_get_media_type_string(type));
             return ret;
         }
-/*
+        /*
         Init the decoders, with or without reference counting
 */
 
         av_dict_set(&opts, "refcounted_frames", refcount ? "1" : "0", 0);
-        if ((ret = avcodec_open2(*dec_ctx, dec, &opts)) < 0) {
+        if ((ret = avcodec_open2(*dec_ctx, dec, &opts)) < 0)
+        {
             fprintf(stderr, "Failed to open %s codec\n",
                     av_get_media_type_string(type));
             return ret;
@@ -167,59 +199,61 @@ static int open_codec_context(int *stream_idx,
     return 0;
 }
 
+int main(int argc, char **argv)
+{
+    pcvInitialize();
+    pcvSetClockRate(PcvModule_Cpu, 1785000000);
 
-int main(int argc, char **argv) {
     socketInitializeDefault();
+
     nxlinkStdio();
+    gfxInitDefault();
 
     avformat_network_init();
-
 
     int ret = 0;
     int got_frame;
 
-    const char *video_dst_filename = "out.mp4";
-#define URL "tcp://0.0.0.0:2222"
-//#define TCP_RECV_BUFFER "100000"   // 1M
+    #define URL "tcp://0.0.0.0:2222"
+    #define TCP_RECV_BUFFER "500000"
 
     // setting TCP input options
     AVDictionary *opts = 0;
-    av_dict_set(&opts, "listen", "1", 0);                               // set option for listening
-    //av_dict_set(&opts, "recv_buffer_size", TCP_RECV_BUFFER, 0);       // set option for size of receive buffer
+    av_dict_set(&opts, "listen", "1", 0); // set option for listening
+    av_dict_set(&opts, "recv_buffer_size", TCP_RECV_BUFFER, 0);       // set option for size of receive buffer
 
-/*
+    /*
     open input file, and allocate format context
 */
 
-    ret = avformat_open_input(&fmt_ctx,URL, 0, &opts);
-    if(ret < 0) {
+    ret = avformat_open_input(&fmt_ctx, URL, 0, &opts);
+    if (ret < 0)
+    {
         char errbuf[100];
         av_strerror(ret, errbuf, 100);
 
         fprintf(stderr, "Input Error %s\n", errbuf);
-        while(1);
+        while (1)
+            ;
     }
 
-/*
+    /*
     retrieve stream information
 */
 
-    if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
+    if (avformat_find_stream_info(fmt_ctx, NULL) < 0)
+    {
         fprintf(stderr, "Could not find stream information\n");
-        while(1);
+        while (1)
+            ;
     }
 
     // Context for the video
-    if (open_codec_context(&video_stream_idx, &video_dec_ctx, fmt_ctx, AVMEDIA_TYPE_VIDEO) >= 0) {
+    if (open_codec_context(&video_stream_idx, &video_dec_ctx, fmt_ctx, AVMEDIA_TYPE_VIDEO) >= 0)
+    {
         video_stream = fmt_ctx->streams[video_stream_idx];
-        video_dst_file = fopen(video_dst_filename, "wb");
-        if (video_dst_file == NULL) {
-            fprintf(stderr, "Could not open destination file %s\n", video_dst_filename);
-            ret = 1;
-            goto end;
-        }
 
-/*
+        /*
         allocate image where the decoded image will be put
 */
         // maybe one should adjust these ...
@@ -229,7 +263,8 @@ int main(int argc, char **argv) {
 
         ret = av_image_alloc(video_dst_data, video_dst_linesize,
                              width, height, pix_fmt, 1);
-        if (ret < 0) {
+        if (ret < 0)
+        {
             fprintf(stderr, "Could not allocate raw video buffer\n");
             goto end;
         }
@@ -239,39 +274,45 @@ int main(int argc, char **argv) {
     //dump input information to stderr
     //av_dump_format(fmt_ctx, 0, URL, 0);
 
-
-    if (video_stream == NULL) {
+    if (video_stream == NULL)
+    {
         fprintf(stderr, "Could not find stream in the input, aborting\n");
         ret = 1;
         goto end;
     }
 
+    rgbframe = av_frame_alloc();
+    rgbframe->width = 1280;
+    rgbframe->height = 720;
+    rgbframe->format = AV_PIX_FMT_RGBA;
+    av_image_alloc(rgbframe->data, rgbframe->linesize, rgbframe->width, rgbframe->height, rgbframe->format, 32);
+
     frame = av_frame_alloc();
-    if (frame == NULL) {
+
+    if (frame == NULL)
+    {
         fprintf(stderr, "Could not allocate frame\n");
         ret = AVERROR(ENOMEM);
         goto end;
     }
 
-/*
+    /*
     initialize packet, set data to NULL, let the demuxer fill it
 */
 
     av_init_packet(&pkt);
     pkt.data = NULL;
     pkt.size = 0;
-    if (video_stream)
-        printf("Demuxing video from input into '%s'\n", video_dst_filename);
 
-
-
-/*
+    /*
     read frames from the file
 */
 
-    while (av_read_frame(fmt_ctx, &pkt) >= 0) {
+    while (av_read_frame(fmt_ctx, &pkt) >= 0)
+    {
         AVPacket orig_pkt = pkt;
-        do {
+        do
+        {
             ret = decode_packet(&got_frame, 0);
             if (ret < 0)
                 break;
@@ -280,30 +321,24 @@ int main(int argc, char **argv) {
         } while (pkt.size > 0);
         av_packet_unref(&orig_pkt);
     }
-/*
+    /*
     flush cached frames
 */
 
     pkt.data = NULL;
     pkt.size = 0;
-    do {
+    do
+    {
         decode_packet(&got_frame, 1);
     } while (got_frame);
 
     printf("Demuxing succeeded.\n");
-    if (video_stream) {
-        printf("Play the output video file with the command:\n"
-               "ffplay -f rawvideo -pix_fmt %s -video_size %dx%d %s\n",
-               av_get_pix_fmt_name(pix_fmt), width, height,
-               video_dst_filename);
-    }
 
-    end:
+end:
     avcodec_free_context(&video_dec_ctx);
     avcodec_free_context(&audio_dec_ctx);
     avformat_close_input(&fmt_ctx);
-    if (video_dst_file)
-        fclose(video_dst_file);
+
 
     av_frame_free(&frame);
     av_free(video_dst_data[0]);
@@ -312,4 +347,3 @@ int main(int argc, char **argv) {
     socketExit();
     return ret < 0;
 }
-
