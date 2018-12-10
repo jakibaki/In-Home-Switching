@@ -1,237 +1,315 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
 
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <errno.h>
-#include <arpa/inet.h>
+/*
+ * Copyright (c) 2012 Stefano Sabatini
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
 
-#include "util.h"
-#include "gamepad.h"
 
-#define _ERROR_PRINT
-#include "h264/h264bsd_decoder.h"
-#include "h264/h264bsd_util.h"
+*
+ * @file
+ * Demuxing and decoding example.
+ *
+ * Show how to use the libavformat and libavcodec API to demux and
+ * decode audio and video data.
+ * @example demuxing_decoding.c
 
+*/
+#include <libavutil/imgutils.h>
+#include <libavutil/samplefmt.h>
+#include <libavutil/timestamp.h>
+#include <libavformat/avformat.h>
 #include <switch.h>
 
-#define MAGIC 0x010000 // "flipped" due to little endian
-#define MAGIC_MASK 0x00FFFFFF
+static AVFormatContext *fmt_ctx = NULL;
+static AVCodecContext *video_dec_ctx = NULL, *audio_dec_ctx;
+static int width, height;
+static enum AVPixelFormat pix_fmt;
+static AVStream *video_stream = NULL, *audio_stream = NULL;
+static uint8_t *video_dst_data[4] = {NULL};
+static int video_dst_linesize[4];
+static int video_dst_bufsize;
+static int video_stream_idx = -1, audio_stream_idx = -1;
+static AVFrame *frame = NULL;
+static AVPacket pkt;
+static int video_frame_count = 0;
+static int audio_frame_count = 0;
 
-#define BUF_SIZE 10000000
-#define LEN_SIZE 0x100
+static FILE *video_dst_file;
 
-u32 fbwidth, fbheight;
+/*Enable or disable frame reference counting. You are not supposed to support
+* both paths in your application but pick the one most appropriate to your
+* needs. Look for the use of refcount in this example to see what are the
+* differences of API usage between them.
+*/
+static int refcount = 0;
 
-#define RESX 1280
-#define RESY 720
-u8 *fakebuf[RESX * RESY * 4] = {0};
-static Mutex fbMut;
+static int decode_packet(int* got_frame, int cached) {
+    int ret = 0;
+    int decoded = pkt.size;
+    *got_frame = 0;
+    if (pkt.stream_index == video_stream_idx) {
+        //decode video frame
 
-void decodeLoop()
-{
-    u8 *buf = malloc(BUF_SIZE);
-    u8 *byteStrm = buf;
-
-
-    printf("Decoder: Trying to listen!\n");    
-    int listenfd = setupServerSocket(6543);
-    printf("Decoder: Can listen!\n");
-
-    int c = sizeof(struct sockaddr_in);
-    struct sockaddr_in client;
-    
-    while (appletMainLoop())
-    {
-        u32 readBytes;
-        int numPics = 0;
-        u32 *pic;
-        u32 picId, isIdrPic, numErrMbs;
-        u32 top, left, width, height, croppingFlag;
-
-        printf("Trying to accept!\n");
-        int sock = accept(listenfd, (struct sockaddr *)&client, (socklen_t *)&c);
-        if(sock < 0) {
-            printf("Accepting failed!\n");
-            close(listenfd);
-            listenfd = setupServerSocket(6543);
-            continue;
+        // deprecated --> use avcodec_send_packet() and avcodec_receive_frame() instead?
+        ret = avcodec_decode_video2(video_dec_ctx, frame, got_frame, &pkt);
+        if (ret < 0) {
+            fprintf(stderr, "Error decoding video frame (%s)\n", av_err2str(ret));
+            return ret;
         }
-        printf("Got connection!\n");
+        if (*got_frame) {
+            if (frame->width != width || frame->height != height ||
+                frame->format != pix_fmt) {
+                /*
+                 To handle this change, one could call av_image_alloc again and
+                                 * decode the following frames into another rawvideo file.
+                */
 
-        u32 status;
-        storage_t dec;
-        status = h264bsdInit(&dec, 1);
+                fprintf(stderr, "Error: Width, height and pixel format have to be "
+                                "constant in a rawvideo file, but the width, height or "
+                                "pixel format of the input video changed:\n"
+                                "old: width = %d, height = %d, format = %s\n"
+                                "new: width = %d, height = %d, format = %s\n",
+                        width, height, av_get_pix_fmt_name(pix_fmt),
+                        frame->width, frame->height,
+                        av_get_pix_fmt_name(frame->format));
+                return -1;
+            }
+            printf("video_frame%s n:%d coded_n:%d\n",
+                   cached ? "(cached)" : "",
+                   video_frame_count++, frame->coded_picture_number);
+            /*
+             copy decoded frame to destination buffer:
+                         * this is required since rawvideo expects non aligned data
+            */
 
-        if (status != HANTRO_OK)
-        {
-            fprintf(stderr, "h264bsdInit failed\n");
-            while (1)
-                ;
+            // --> maybe do other stuff with the frames instead?
+            //av_image_copy(video_dst_data, video_dst_linesize,
+            //              (const uint8_t **) (frame->data), frame->linesize,
+            //              pix_fmt, width, height);
+            
+            //write to rawvideo file
+
+            //fwrite(video_dst_data[0], 1, video_dst_bufsize, video_dst_file);
         }
-
-        int len = 0;
-
-        while (appletMainLoop())
-        {
-
-            // If our buffer begins to run full we want to move stuff to the front
-            if (BUF_SIZE - (byteStrm - buf) - len < LEN_SIZE)
-            {
-                // Copy the rest to the start of the buffer and set the byteStrm back to the beginning too
-                memcpy(buf, byteStrm, BUF_SIZE - (byteStrm - buf) + len);
-                byteStrm = buf;
-            }
-
-            int recvlen = recv(sock, byteStrm + len, LEN_SIZE, 0);
-            if (recvlen <= 0)
-            {
-                printf("Recv failed!\nConnection close?\n");
-                break;
-            }
-
-            len += recvlen;
-
-            // Waiting for the network to get enough data to decode stuff
-            u8 done_data = 0;
-            // TODO: No need to check the whole buffer every loop
-            for (int i = 4; i < len - 4; i++)
-            {
-                if ((*((unsigned int *)(byteStrm + len - i)) & MAGIC_MASK) == MAGIC) // When it finds the magic the fun is over.
-                {
-                    done_data = 1;
-                    break;
-                }
-            }
-            if (!done_data)
-                continue;
-
-            u32 result = h264bsdDecode(&dec, byteStrm, len, 0, &readBytes);
-            len -= readBytes;
-            byteStrm += readBytes;
-
-            char shouldCont = 1;
-            switch (result)
-            {
-            case H264BSD_PIC_RDY:
-                pic = h264bsdNextOutputPicture(&dec, &picId, &isIdrPic, &numErrMbs);
-
-                mutexLock(&fbMut);
-                memcpy(fakebuf, pic, fbwidth * fbheight * 4);
-                mutexUnlock(&fbMut);
-
-                if (++numPics % 60 == 0)
-                    printf("%d\n", numPics);
-
-                break;
-            case H264BSD_HDRS_RDY:
-                h264bsdCroppingParams(&dec, &croppingFlag, &left, &width, &top, &height);
-                if (!croppingFlag)
-                {
-                    width = h264bsdPicWidth(&dec) * 16;
-                    height = h264bsdPicHeight(&dec) * 16;
-                }
-                else
-                {
-                    fprintf(stderr, "Uhm, cropping flag set, panic!!!\n");
-                    shouldCont = 0;
-                    break;
-                }
-                printf("Decoded headers. Image size %dx%d\n", width, height);
-                break;
-            case H264BSD_RDY:
-                break;
-            case H264BSD_ERROR:
-                fprintf(stderr, "Error\n");
-                shouldCont = 0;
-                break;
-            case H264BSD_PARAM_SET_ERROR:
-                fprintf(stderr, "Param set error\n");
-                shouldCont = 0;
-                break;
-            }
-            if (!shouldCont)
-                break;
-        }
-
-        h264bsdShutdown(&dec);
-
-        close(sock);
     }
-    close(listenfd);
+    return ret;
 }
 
-#define CLOCK_RATE 1785000000
+static int open_codec_context(int *stream_idx,
+                              AVCodecContext **dec_ctx, AVFormatContext *fmt_ctx, enum AVMediaType type) {
+    int ret, stream_index;
+    AVStream *st;
+    AVCodec *dec = NULL;
+    AVDictionary *opts = NULL;
+    ret = av_find_best_stream(fmt_ctx, type, -1, -1, NULL, 0);
+    if (ret < 0) {
+        fprintf(stderr, "Could not find %s stream in input file \n",
+                av_get_media_type_string(type));
+        return ret;
+    } else {
+        stream_index = ret;
+        st = fmt_ctx->streams[stream_index];
+        /*find decoder for the stream*/
 
-int main(int argc, char **argv)
-{
-    pcvInitialize();
-    pcvSetClockRate(PcvModule_Cpu, CLOCK_RATE); // Overclocking ;)
-
-    // TODO: This is rather unoptimized
-    static const SocketInitConfig socketInitConfig = {
-        .bsdsockets_version = 1,
-
-        .tcp_tx_buf_size = LEN_SIZE * 50,
-        .tcp_rx_buf_size = LEN_SIZE * 50,
-        .tcp_tx_buf_max_size = LEN_SIZE * 80,
-        .tcp_rx_buf_max_size = LEN_SIZE * 80,
-
-        .udp_tx_buf_size = 0x2400,
-        .udp_rx_buf_size = 0xA500,
-
-        .sb_efficiency = 2,
-    };
-
-    socketInitialize(&socketInitConfig);
-    //socketInitializeDefault();
-
-    nxlinkStdio();
-
-    gfxInitDefault();
-    mutexInit(&fbMut);
-
-
-    Thread decodeThread;
-    threadCreate(&decodeThread, decodeLoop, NULL, 0x5000, 0x2C, 2);
-    threadStart(&decodeThread);
-
-
-    int c = sizeof(struct sockaddr_in);
-    struct sockaddr_in client;
-
-    int listenfd = setupServerSocket(6544);
-    int sock = accept(listenfd, (struct sockaddr *)&client, (socklen_t *)&c);
-
-    while (appletMainLoop())
-    {
-        u8 *fb = gfxGetFramebuffer(&fbwidth, &fbheight);
-        mutexLock(&fbMut);
-        h264bsdConvertToRGBA(RESX, RESY, fakebuf, fb);
-        mutexUnlock(&fbMut);
-
-        if(gamePadSend(sock) != 0) {
-            sock = accept(listenfd, (struct sockaddr *)&client, (socklen_t *)&c);
+        dec = avcodec_find_decoder(st->codecpar->codec_id);
+        if (!dec) {
+            fprintf(stderr, "Failed to find %s codec\n",
+                    av_get_media_type_string(type));
+            return AVERROR(EINVAL);
         }
+/*
+        Allocate a codec context for the decoder
+*/
 
+        *dec_ctx = avcodec_alloc_context3(dec);
+        if (!*dec_ctx) {
+            fprintf(stderr, "Failed to allocate the %s codec context\n",
+                    av_get_media_type_string(type));
+            return AVERROR(ENOMEM);
+        }
+/*
+        Copy codec parameters from input stream to output codec context
+*/
 
-        gfxFlushBuffers();
-        gfxSwapBuffers();
+        if ((ret = avcodec_parameters_to_context(*dec_ctx, st->codecpar)) < 0) {
+            fprintf(stderr, "Failed to copy %s codec parameters to decoder context\n",
+                    av_get_media_type_string(type));
+            return ret;
+        }
+/*
+        Init the decoders, with or without reference counting
+*/
 
-
+        av_dict_set(&opts, "refcounted_frames", refcount ? "1" : "0", 0);
+        if ((ret = avcodec_open2(*dec_ctx, dec, &opts)) < 0) {
+            fprintf(stderr, "Failed to open %s codec\n",
+                    av_get_media_type_string(type));
+            return ret;
+        }
+        *stream_idx = stream_index;
     }
-
-    consoleExit(NULL);
-    socketExit();
-    pcvExit();
-    gfxExit();
     return 0;
 }
+
+
+int main(int argc, char **argv) {
+    socketInitializeDefault();
+    nxlinkStdio();
+
+    avformat_network_init();
+
+
+    int ret = 0;
+    int got_frame;
+
+    const char *video_dst_filename = "out.mp4";
+#define URL "tcp://0.0.0.0:2222"
+//#define TCP_RECV_BUFFER "100000"   // 1M
+
+    // setting TCP input options
+    AVDictionary *opts = 0;
+    av_dict_set(&opts, "listen", "1", 0);                               // set option for listening
+    //av_dict_set(&opts, "recv_buffer_size", TCP_RECV_BUFFER, 0);       // set option for size of receive buffer
+
+/*
+    open input file, and allocate format context
+*/
+
+    ret = avformat_open_input(&fmt_ctx,URL, 0, &opts);
+    if(ret < 0) {
+        char errbuf[100];
+        av_strerror(ret, errbuf, 100);
+
+        fprintf(stderr, "Input Error %s\n", errbuf);
+        while(1);
+    }
+
+/*
+    retrieve stream information
+*/
+
+    if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
+        fprintf(stderr, "Could not find stream information\n");
+        while(1);
+    }
+
+    // Context for the video
+    if (open_codec_context(&video_stream_idx, &video_dec_ctx, fmt_ctx, AVMEDIA_TYPE_VIDEO) >= 0) {
+        video_stream = fmt_ctx->streams[video_stream_idx];
+        video_dst_file = fopen(video_dst_filename, "wb");
+        if (video_dst_file == NULL) {
+            fprintf(stderr, "Could not open destination file %s\n", video_dst_filename);
+            ret = 1;
+            goto end;
+        }
+
+/*
+        allocate image where the decoded image will be put
+*/
+        // maybe one should adjust these ...
+        width = video_dec_ctx->width;
+        height = video_dec_ctx->height;
+        pix_fmt = video_dec_ctx->pix_fmt;
+
+        ret = av_image_alloc(video_dst_data, video_dst_linesize,
+                             width, height, pix_fmt, 1);
+        if (ret < 0) {
+            fprintf(stderr, "Could not allocate raw video buffer\n");
+            goto end;
+        }
+        video_dst_bufsize = ret;
+    }
+
+    //dump input information to stderr
+    //av_dump_format(fmt_ctx, 0, URL, 0);
+
+
+    if (video_stream == NULL) {
+        fprintf(stderr, "Could not find stream in the input, aborting\n");
+        ret = 1;
+        goto end;
+    }
+
+    frame = av_frame_alloc();
+    if (frame == NULL) {
+        fprintf(stderr, "Could not allocate frame\n");
+        ret = AVERROR(ENOMEM);
+        goto end;
+    }
+
+/*
+    initialize packet, set data to NULL, let the demuxer fill it
+*/
+
+    av_init_packet(&pkt);
+    pkt.data = NULL;
+    pkt.size = 0;
+    if (video_stream)
+        printf("Demuxing video from input into '%s'\n", video_dst_filename);
+
+
+
+/*
+    read frames from the file
+*/
+
+    while (av_read_frame(fmt_ctx, &pkt) >= 0) {
+        AVPacket orig_pkt = pkt;
+        do {
+            ret = decode_packet(&got_frame, 0);
+            if (ret < 0)
+                break;
+            pkt.data += ret;
+            pkt.size -= ret;
+        } while (pkt.size > 0);
+        av_packet_unref(&orig_pkt);
+    }
+/*
+    flush cached frames
+*/
+
+    pkt.data = NULL;
+    pkt.size = 0;
+    do {
+        decode_packet(&got_frame, 1);
+    } while (got_frame);
+
+    printf("Demuxing succeeded.\n");
+    if (video_stream) {
+        printf("Play the output video file with the command:\n"
+               "ffplay -f rawvideo -pix_fmt %s -video_size %dx%d %s\n",
+               av_get_pix_fmt_name(pix_fmt), width, height,
+               video_dst_filename);
+    }
+
+    end:
+    avcodec_free_context(&video_dec_ctx);
+    avcodec_free_context(&audio_dec_ctx);
+    avformat_close_input(&fmt_ctx);
+    if (video_dst_file)
+        fclose(video_dst_file);
+
+    av_frame_free(&frame);
+    av_free(video_dst_data[0]);
+    avformat_network_deinit();
+
+    socketExit();
+    return ret < 0;
+}
+
