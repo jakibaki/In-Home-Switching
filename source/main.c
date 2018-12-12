@@ -37,6 +37,7 @@
 #include <libswscale/swscale.h>
 
 #include <switch.h>
+#include <input.h>
 
 static AVFormatContext *fmt_ctx = NULL;
 static AVCodecContext *video_dec_ctx = NULL; //, *audio_dec_ctx;
@@ -60,6 +61,8 @@ static int video_frame_count = 0;
 * differences of API usage between them.
 */
 static int refcount = 0;
+
+
 
 static int decode_packet(int *got_frame, int cached)
 {
@@ -109,9 +112,14 @@ static int decode_packet(int *got_frame, int cached)
 
             u8 *fbuf = gfxGetFramebuffer(NULL, NULL);
 
+            
+            // We're scaling "into" the framebuffer for performance reasons.
             sws_scale(ctx_sws, (const uint8_t *)frame->data, frame->linesize, 0, frame->height, &fbuf, rgbframe->linesize);
 
             //memcpy(fbuf, rgbframe->data[0], 1280 * 720 * 4);
+
+
+            handleInput();
             gfxFlushBuffers();
             gfxSwapBuffers();
             /*
