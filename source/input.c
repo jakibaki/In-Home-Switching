@@ -56,6 +56,7 @@ int handleInput()
             close(lissock);
             sock = -1;
             lissock = -1;
+            return;
         }
     }
 
