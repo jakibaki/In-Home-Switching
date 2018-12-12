@@ -21,7 +21,7 @@ int sock = -1;
 
 int handleInput()
 {
-    if (lissock = -1)
+    if (lissock == -1)
     {
         if (sock != -1)
         {
