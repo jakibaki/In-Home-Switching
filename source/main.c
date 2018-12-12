@@ -39,14 +39,14 @@
 #include <switch.h>
 
 static AVFormatContext *fmt_ctx = NULL;
-static AVCodecContext *video_dec_ctx = NULL;//, *audio_dec_ctx;
+static AVCodecContext *video_dec_ctx = NULL; //, *audio_dec_ctx;
 static int width, height;
 static enum AVPixelFormat pix_fmt;
-static AVStream *video_stream = NULL;//, *audio_stream = NULL;
+static AVStream *video_stream = NULL; //, *audio_stream = NULL;
 static uint8_t *video_dst_data[4] = {NULL};
 static int video_dst_linesize[4];
 static int video_dst_bufsize;
-static int video_stream_idx = -1;//, audio_stream_idx = -1;
+static int video_stream_idx = -1; //, audio_stream_idx = -1;
 static AVFrame *frame = NULL;
 static AVFrame *rgbframe = NULL;
 static struct SwsContext *ctx_sws = NULL;
@@ -109,7 +109,7 @@ static int decode_packet(int *got_frame, int cached)
 
             u8 *fbuf = gfxGetFramebuffer(NULL, NULL);
 
-            sws_scale(ctx_sws, (const uint8_t *) frame->data, frame->linesize, 0, frame->height, &fbuf, rgbframe->linesize);
+            sws_scale(ctx_sws, (const uint8_t *)frame->data, frame->linesize, 0, frame->height, &fbuf, rgbframe->linesize);
 
             //memcpy(fbuf, rgbframe->data[0], 1280 * 720 * 4);
             gfxFlushBuffers();
@@ -215,8 +215,7 @@ int handleVid()
         av_strerror(ret, errbuf, 100);
 
         fprintf(stderr, "Input Error %s\n", errbuf);
-        while (1)
-            ;
+        goto end;
     }
 
     //retrieve stream information
@@ -224,8 +223,7 @@ int handleVid()
     if (avformat_find_stream_info(fmt_ctx, NULL) < 0)
     {
         fprintf(stderr, "Could not find stream information\n");
-        while (1)
-            ;
+        goto end;
     }
 
     // Context for the video
@@ -319,7 +317,6 @@ end:
     return ret;
 }
 
-
 int main(int argc, char **argv)
 {
     pcvInitialize();
@@ -350,7 +347,8 @@ int main(int argc, char **argv)
 
     avformat_network_init();
 
-    while(appletMainLoop()) {
+    while (appletMainLoop())
+    {
         handleVid();
     }
 
