@@ -54,7 +54,6 @@ static AVPacket pkt;
 static int video_frame_count = 0;
 static int audio_frame_count = 0;
 
-
 /*Enable or disable frame reference counting. You are not supposed to support
 * both paths in your application but pick the one most appropriate to your
 * needs. Look for the use of refcount in this example to see what are the
@@ -110,7 +109,6 @@ static int decode_packet(int *got_frame, int cached)
                 ctx_sws = sws_getContext(frame->width, frame->height, pix_fmt, frame->width, frame->height, AV_PIX_FMT_RGBA, SWS_BILINEAR, 0, 0, 0);
 
             u8 *fbuf = gfxGetFramebuffer(NULL, NULL);
-            
 
             sws_scale(ctx_sws, frame->data, frame->linesize, 0, frame->height, &fbuf, rgbframe->linesize);
 
@@ -204,7 +202,26 @@ int main(int argc, char **argv)
     pcvInitialize();
     pcvSetClockRate(PcvModule_Cpu, 1785000000);
 
-    socketInitializeDefault();
+    static const SocketInitConfig socketInitConf = {
+        .bsdsockets_version = 1,
+
+        .tcp_tx_buf_size = 0x8000,
+        .tcp_rx_buf_size = 0x10000,
+        .tcp_tx_buf_max_size = 0x40000,
+        .tcp_rx_buf_max_size = 0x40000,
+
+        .udp_tx_buf_size = 0xA2400,
+        .udp_rx_buf_size = 0xAA500,
+
+        .sb_efficiency = 4,
+
+        .serialized_out_addrinfos_max_size = 0x1000,
+        .serialized_out_hostent_max_size = 0x200,
+        .bypass_nsd = false,
+        .dns_timeout = 0,
+    };
+    socketInitialize(&socketInitConf);
+    //    socketInitializeDefault();
 
     nxlinkStdio();
     gfxInitDefault();
@@ -214,13 +231,13 @@ int main(int argc, char **argv)
     int ret = 0;
     int got_frame;
 
-    #define URL "tcp://0.0.0.0:2222"
-    #define TCP_RECV_BUFFER "500000"
+#define URL "tcp://0.0.0.0:2222"
+    //#define TCP_RECV_BUFFER "500000"
 
     // setting TCP input options
     AVDictionary *opts = 0;
     av_dict_set(&opts, "listen", "1", 0); // set option for listening
-    av_dict_set(&opts, "recv_buffer_size", TCP_RECV_BUFFER, 0);       // set option for size of receive buffer
+    //av_dict_set(&opts, "recv_buffer_size", TCP_RECV_BUFFER, 0);       // set option for size of receive buffer
 
     /*
     open input file, and allocate format context
@@ -265,7 +282,9 @@ int main(int argc, char **argv)
                              width, height, pix_fmt, 1);
         if (ret < 0)
         {
-            fprintf(stderr, "Could not allocate raw video buffer\n");
+            char errbuf[100];
+            av_strerror(ret, errbuf, 100);
+            fprintf(stderr, "Could not allocate raw video buffer %s\n", errbuf);
             goto end;
         }
         video_dst_bufsize = ret;
@@ -338,7 +357,6 @@ end:
     avcodec_free_context(&video_dec_ctx);
     avcodec_free_context(&audio_dec_ctx);
     avformat_close_input(&fmt_ctx);
-
 
     av_frame_free(&frame);
     av_free(video_dst_data[0]);
