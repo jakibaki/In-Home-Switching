@@ -11,16 +11,16 @@ This project is fairly new, so please do not consider it totally stable. If you 
     * 720p (full Switch display resolution)
     * 40-60 FPS (if not see Troubleshooting)
     * Low delay (again, see Troubleshooting)
-  * Capture controller input on Switch
+  * Capture controller input on Nintendo Switch
     * Emulate an Xbox controller on the PC
   * PC app offers picture quality adjustments
 
 ## How to Use
-If you do not want to build by yourself, have a look at the [releases page](https://github.com/jakibaki/In-Home-Switching/releases). There you can find the App for the Switch as well as the corresponding PC companion App.
+If you do not want to build by yourself, have a look at the [releases page](https://github.com/jakibaki/In-Home-Switching/releases). There you can find the App for the Switch as well as the corresponding PC companion app.
 
 On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) should also be installed (just unzip and execute `Driver Installer/ScpDriverInstaller.exe`).
 
-On your Switch, find out its IP (in the Internet settings) and start the App with your Switch CFW. Type in the IP on the PC app and hit Link start!
+On your Switch, find out its IP (in the Internet settings) and start the app with your Switch CFW. Type in the IP on the PC app and hit Link start!
 
 ## Screenshots
 
@@ -34,7 +34,7 @@ MISSING
 ## Scheduled for Future Releases
   * Stream PC audio to Switch
   * Multi-controller support
-  * Showing Switch IP in-App
+  * Showing Switch IP in-app
   * More efficient threading
 
 ## Build instructions
