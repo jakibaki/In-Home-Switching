@@ -42,6 +42,7 @@ On the Switch, find out its IP address (in the Internet settings) and start the 
 
 ## Scheduled for Future Releases
   * Stream PC audio to Switch
+  * MacOS and Linux Support
   * Multi-controller support
   * Showing Switch IP in-app
   * More efficient threading
