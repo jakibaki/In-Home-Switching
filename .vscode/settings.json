@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "imgutils.h": "c"
+        "imgutils.h": "c",
+        "fcntl.h": "c"
     }
 }

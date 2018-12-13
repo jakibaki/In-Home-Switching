@@ -37,22 +37,23 @@
 #include <libswscale/swscale.h>
 
 #include <switch.h>
+#include "input.h"
 
 static AVFormatContext *fmt_ctx = NULL;
-static AVCodecContext *video_dec_ctx = NULL, *audio_dec_ctx;
+static AVCodecContext *video_dec_ctx = NULL; //, *audio_dec_ctx;
 static int width, height;
 static enum AVPixelFormat pix_fmt;
-static AVStream *video_stream = NULL, *audio_stream = NULL;
+static AVStream *video_stream = NULL; //, *audio_stream = NULL;
 static uint8_t *video_dst_data[4] = {NULL};
 static int video_dst_linesize[4];
 static int video_dst_bufsize;
-static int video_stream_idx = -1, audio_stream_idx = -1;
+static int video_stream_idx = -1; //, audio_stream_idx = -1;
 static AVFrame *frame = NULL;
 static AVFrame *rgbframe = NULL;
 static struct SwsContext *ctx_sws = NULL;
 static AVPacket pkt;
 static int video_frame_count = 0;
-static int audio_frame_count = 0;
+//static int audio_frame_count = 0;
 
 /*Enable or disable frame reference counting. You are not supposed to support
 * both paths in your application but pick the one most appropriate to your
@@ -61,10 +62,11 @@ static int audio_frame_count = 0;
 */
 static int refcount = 0;
 
+
+
 static int decode_packet(int *got_frame, int cached)
 {
     int ret = 0;
-    int decoded = pkt.size;
     *got_frame = 0;
     if (pkt.stream_index == video_stream_idx)
     {
@@ -110,9 +112,14 @@ static int decode_packet(int *got_frame, int cached)
 
             u8 *fbuf = gfxGetFramebuffer(NULL, NULL);
 
-            sws_scale(ctx_sws, frame->data, frame->linesize, 0, frame->height, &fbuf, rgbframe->linesize);
+            
+            // We're scaling "into" the framebuffer for performance reasons.
+            sws_scale(ctx_sws, (const uint8_t *)frame->data, frame->linesize, 0, frame->height, &fbuf, rgbframe->linesize);
 
             //memcpy(fbuf, rgbframe->data[0], 1280 * 720 * 4);
+
+
+            handleInput();
             gfxFlushBuffers();
             gfxSwapBuffers();
             /*
@@ -151,7 +158,7 @@ static int open_codec_context(int *stream_idx,
     {
         stream_index = ret;
         st = fmt_ctx->streams[stream_index];
-        /*find decoder for the stream*/
+        // find decoder for the stream
 
         dec = avcodec_find_decoder(st->codecpar->codec_id);
         if (dec == NULL)
@@ -160,9 +167,7 @@ static int open_codec_context(int *stream_idx,
                     av_get_media_type_string(type));
             return AVERROR(EINVAL);
         }
-        /*
-        Allocate a codec context for the decoder
-*/
+        // Allocate a codec context for the decoder
 
         *dec_ctx = avcodec_alloc_context3(dec);
         if (*dec_ctx == NULL)
@@ -181,9 +186,7 @@ static int open_codec_context(int *stream_idx,
                     av_get_media_type_string(type));
             return ret;
         }
-        /*
-        Init the decoders, with or without reference counting
-*/
+        //Init the decoders, with or without reference counting
 
         av_dict_set(&opts, "refcounted_frames", refcount ? "1" : "0", 0);
         if ((ret = avcodec_open2(*dec_ctx, dec, &opts)) < 0)
@@ -197,51 +200,21 @@ static int open_codec_context(int *stream_idx,
     return 0;
 }
 
-int main(int argc, char **argv)
+int handleVid()
 {
-    pcvInitialize();
-    pcvSetClockRate(PcvModule_Cpu, 1785000000);
-
-    static const SocketInitConfig socketInitConf = {
-        .bsdsockets_version = 1,
-
-        .tcp_tx_buf_size = 0x8000,
-        .tcp_rx_buf_size = 0x10000,
-        .tcp_tx_buf_max_size = 0x40000,
-        .tcp_rx_buf_max_size = 0x40000,
-
-        .udp_tx_buf_size = 0xA2400,
-        .udp_rx_buf_size = 0xAA500,
-
-        .sb_efficiency = 4,
-
-        .serialized_out_addrinfos_max_size = 0x1000,
-        .serialized_out_hostent_max_size = 0x200,
-        .bypass_nsd = false,
-        .dns_timeout = 0,
-    };
-    socketInitialize(&socketInitConf);
-    //    socketInitializeDefault();
-
-    nxlinkStdio();
-    gfxInitDefault();
-
-    avformat_network_init();
 
     int ret = 0;
     int got_frame;
 
 #define URL "tcp://0.0.0.0:2222"
-    //#define TCP_RECV_BUFFER "500000"
-
+    handleInput(); // Ensures that gamepad-connection happens before ffmpeg
     // setting TCP input options
     AVDictionary *opts = 0;
     av_dict_set(&opts, "listen", "1", 0); // set option for listening
+    //#define TCP_RECV_BUFFER "500000"
     //av_dict_set(&opts, "recv_buffer_size", TCP_RECV_BUFFER, 0);       // set option for size of receive buffer
 
-    /*
-    open input file, and allocate format context
-*/
+    //open input file, and allocate format context
 
     ret = avformat_open_input(&fmt_ctx, URL, 0, &opts);
     if (ret < 0)
@@ -250,19 +223,15 @@ int main(int argc, char **argv)
         av_strerror(ret, errbuf, 100);
 
         fprintf(stderr, "Input Error %s\n", errbuf);
-        while (1)
-            ;
+        goto end;
     }
 
-    /*
-    retrieve stream information
-*/
+    //retrieve stream information
 
     if (avformat_find_stream_info(fmt_ctx, NULL) < 0)
     {
         fprintf(stderr, "Could not find stream information\n");
-        while (1)
-            ;
+        goto end;
     }
 
     // Context for the video
@@ -270,10 +239,8 @@ int main(int argc, char **argv)
     {
         video_stream = fmt_ctx->streams[video_stream_idx];
 
-        /*
-        allocate image where the decoded image will be put
-*/
-        // maybe one should adjust these ...
+        //allocate image where the decoded image will be put
+
         width = video_dec_ctx->width;
         height = video_dec_ctx->height;
         pix_fmt = video_dec_ctx->pix_fmt;
@@ -315,17 +282,13 @@ int main(int argc, char **argv)
         goto end;
     }
 
-    /*
-    initialize packet, set data to NULL, let the demuxer fill it
-*/
+    //initialize packet, set data to NULL, let the demuxer fill it
 
     av_init_packet(&pkt);
     pkt.data = NULL;
     pkt.size = 0;
 
-    /*
-    read frames from the file
-*/
+    //read frames from the file
 
     while (av_read_frame(fmt_ctx, &pkt) >= 0)
     {
@@ -340,9 +303,8 @@ int main(int argc, char **argv)
         } while (pkt.size > 0);
         av_packet_unref(&orig_pkt);
     }
-    /*
-    flush cached frames
-*/
+
+    //flush cached frames
 
     pkt.data = NULL;
     pkt.size = 0;
@@ -355,13 +317,52 @@ int main(int argc, char **argv)
 
 end:
     avcodec_free_context(&video_dec_ctx);
-    avcodec_free_context(&audio_dec_ctx);
+    //avcodec_free_context(&audio_dec_ctx);
     avformat_close_input(&fmt_ctx);
 
     av_frame_free(&frame);
     av_free(video_dst_data[0]);
+    return ret;
+}
+
+int main(int argc, char **argv)
+{
+    pcvInitialize();
+    pcvSetClockRate(PcvModule_Cpu, 1785000000);
+
+    static const SocketInitConfig socketInitConf = {
+        .bsdsockets_version = 1,
+
+        .tcp_tx_buf_size = 0x8000,
+        .tcp_rx_buf_size = 0x10000,
+        .tcp_tx_buf_max_size = 0x40000,
+        .tcp_rx_buf_max_size = 0x40000,
+
+        .udp_tx_buf_size = 0xA2400,
+        .udp_rx_buf_size = 0xAA500,
+
+        .sb_efficiency = 4,
+
+        .serialized_out_addrinfos_max_size = 0x1000,
+        .serialized_out_hostent_max_size = 0x200,
+        .bypass_nsd = false,
+        .dns_timeout = 0,
+    };
+    socketInitialize(&socketInitConf);
+
+    nxlinkStdio();
+    gfxInitDefault();
+
+    avformat_network_init();
+
+    while (appletMainLoop())
+    {
+        handleVid();
+    }
+
     avformat_network_deinit();
 
+    gfxExit();
+    pcvExit();
     socketExit();
-    return ret < 0;
 }
