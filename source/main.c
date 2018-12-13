@@ -327,12 +327,22 @@ void inputHandlerLoop(void* dummy)
     }
 }
 
+void drawSplash()
+{
+    FILE* img = fopen("romfs:/splash.rgba", "rb");
+    u8 *fbuf = gfxGetFramebuffer(NULL, NULL);
+    fread(fbuf, 1280*720*4, 1, img);
+    fclose(img);
+    gfxFlushBuffers();
+    gfxSwapBuffers();
+}
+
 int main(int argc, char **argv)
 {
     pcvInitialize();
     pcvSetClockRate(PcvModule_Cpu, 1785000000);
     socketInitialize(&socketInitConf);
-
+    romfsInit();
     nxlinkStdio();
     gfxInitDefault();
 
@@ -345,6 +355,7 @@ int main(int argc, char **argv)
 
     while (appletMainLoop())
     {
+        drawSplash();
         handleVid();
     }
 
