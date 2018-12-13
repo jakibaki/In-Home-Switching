@@ -62,4 +62,4 @@ This code is licensed GPLv3 and this has a reason: We do not want to see (or rea
 * [ffmpeg](https://www.ffmpeg.org/) for being such a powerful media tool that we use on PC and Switch.
 * [SwitchBrew](https://switchbrew.org/) for libNX and its ffmpeg inclusion
 * [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere) and [Kosmos](https://github.com/AtlasNX/Kosmos) for being such great Switch CFWs
-* [Captura](https://github.com/MathewSachin/Captura) for showing us how to capture frame input with Windows Duplication API
+* [Captura](https://github.com/MathewSachin/Captura) and its sources for showing us how to capture frame input with Windows Duplication API
