@@ -4,3 +4,4 @@
 *.nacp
 *.nso
 build/*
+.DS_Store
