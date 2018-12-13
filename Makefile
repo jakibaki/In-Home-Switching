@@ -36,7 +36,10 @@ SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=	include
 EXEFS_SRC	:=	exefs_src
-#ROMFS	:=	romfs
+ROMFS	:=	romfs
+APP_AUTHOR := jakibaki, D-VAmpire
+APP_TITLE := In-Home-Switching
+APP_VERSION := 0.1
 
 #---------------------------------------------------------------------------------
 # options for code generation
