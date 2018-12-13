@@ -41,7 +41,7 @@ On the Switch, find out its IP address (in the Internet settings) and start the 
   * App breaks when Switch changes from docked to handheld mode or vice-versa. Please quit the app before doing so.
 
 ## Further notices
-This app uses core overclocking to 1785 MHz on the Nintendo Switch. We use this measure in order to encode the incoming videos efficiently. As far as we know, there have been no reported cases of this damaging any devices. In other words, it is considered safe. Still we do not warrant for any potential device damage caused by this homebrew.
+This app uses core overclocking to 1785 MHz on the Nintendo Switch. We use this measure in order to decode the incoming videos efficiently. As far as we know, there have been no reported cases of this damaging any devices. In other words, it is considered safe. Still we do not warrant for any potential device damage caused by this homebrew.
 
 
 ## Scheduled for Future Releases
