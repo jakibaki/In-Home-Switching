@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <arpa/inet.h>
+#include <stdio.h>
 
 struct JoyPkg
 {
@@ -79,6 +80,7 @@ void handleInput()
             lissock = -1;
             return;
         }
+        printf("Got gamepad-connection\n");
     }
 
     if (sock > 0)

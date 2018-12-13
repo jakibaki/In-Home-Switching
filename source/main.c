@@ -1,3 +1,4 @@
+// The following ffmpeg code is inspired by an official ffmpeg example, so here is its Copyright notice:
 
 /*
  * Copyright (c) 2012 Stefano Sabatini
@@ -30,6 +31,8 @@
  * @example demuxing_decoding.c
 
 */
+
+
 #include <libavutil/imgutils.h>
 #include <libavutil/samplefmt.h>
 #include <libavutil/timestamp.h>
@@ -55,13 +58,28 @@ static AVPacket pkt;
 static int video_frame_count = 0;
 //static int audio_frame_count = 0;
 
-/*Enable or disable frame reference counting. You are not supposed to support
-* both paths in your application but pick the one most appropriate to your
-* needs. Look for the use of refcount in this example to see what are the
-* differences of API usage between them.
-*/
-static int refcount = 0;
+#define URL "tcp://0.0.0.0:2222"
+//#define TCP_RECV_BUFFER "500000"
 
+
+static const SocketInitConfig socketInitConf = {
+    .bsdsockets_version = 1,
+
+    .tcp_tx_buf_size = 0x8000,
+    .tcp_rx_buf_size = 0x10000,
+    .tcp_tx_buf_max_size = 0x40000,
+    .tcp_rx_buf_max_size = 0x40000,
+
+    .udp_tx_buf_size = 0xA2400,
+    .udp_rx_buf_size = 0xAA500,
+
+    .sb_efficiency = 4,
+
+    .serialized_out_addrinfos_max_size = 0x1000,
+    .serialized_out_hostent_max_size = 0x200,
+    .bypass_nsd = false,
+    .dns_timeout = 0,
+};
 
 
 static int decode_packet(int *got_frame, int cached)
@@ -84,11 +102,6 @@ static int decode_packet(int *got_frame, int cached)
             if (frame->width != width || frame->height != height ||
                 frame->format != pix_fmt)
             {
-                /*
-                 To handle this change, one could call av_image_alloc again and
-                                 * decode the following frames into another rawvideo file.
-                */
-
                 fprintf(stderr, "Error: Width, height and pixel format have to be "
                                 "constant in a rawvideo file, but the width, height or "
                                 "pixel format of the input video changed:\n"
@@ -99,9 +112,7 @@ static int decode_packet(int *got_frame, int cached)
                         av_get_pix_fmt_name(frame->format));
                 return -1;
             }
-            //printf("video_frame%s n:%d coded_n:%d\n",
-            //       cached ? "(cached)" : "",
-            //       video_frame_count++, frame->coded_picture_number);
+
             if (++video_frame_count % 60 == 0)
             {
                 printf("%d\n", video_frame_count);
@@ -122,19 +133,6 @@ static int decode_packet(int *got_frame, int cached)
             handleInput();
             gfxFlushBuffers();
             gfxSwapBuffers();
-            /*
-             copy decoded frame to destination buffer:
-                         * this is required since rawvideo expects non aligned data
-            */
-
-            // --> maybe do other stuff with the frames instead?
-            //av_image_copy(video_dst_data, video_dst_linesize,
-            //              (const uint8_t **) (frame->data), frame->linesize,
-            //              pix_fmt, width, height);
-
-            //write to rawvideo file
-
-            //fwrite(video_dst_data[0], 1, video_dst_bufsize, video_dst_file);
         }
     }
     return ret;
@@ -146,7 +144,6 @@ static int open_codec_context(int *stream_idx,
     int ret, stream_index;
     AVStream *st;
     AVCodec *dec = NULL;
-    AVDictionary *opts = NULL;
     ret = av_find_best_stream(fmt_ctx, type, -1, -1, NULL, 0);
     if (ret < 0)
     {
@@ -186,10 +183,9 @@ static int open_codec_context(int *stream_idx,
                     av_get_media_type_string(type));
             return ret;
         }
-        //Init the decoders, with or without reference counting
+        //Init the decoders, without reference counting
 
-        av_dict_set(&opts, "refcounted_frames", refcount ? "1" : "0", 0);
-        if ((ret = avcodec_open2(*dec_ctx, dec, &opts)) < 0)
+        if ((ret = avcodec_open2(*dec_ctx, dec, NULL)) < 0)
         {
             fprintf(stderr, "Failed to open %s codec\n",
                     av_get_media_type_string(type));
@@ -206,12 +202,11 @@ int handleVid()
     int ret = 0;
     int got_frame;
 
-#define URL "tcp://0.0.0.0:2222"
     handleInput(); // Ensures that gamepad-connection happens before ffmpeg
     // setting TCP input options
     AVDictionary *opts = 0;
     av_dict_set(&opts, "listen", "1", 0); // set option for listening
-    //#define TCP_RECV_BUFFER "500000"
+    av_dict_set(&opts, "probesize", "10000", 0);
     //av_dict_set(&opts, "recv_buffer_size", TCP_RECV_BUFFER, 0);       // set option for size of receive buffer
 
     //open input file, and allocate format context
@@ -300,7 +295,8 @@ int handleVid()
                 break;
             pkt.data += ret;
             pkt.size -= ret;
-        } while (pkt.size > 0);
+        } 
+        while (pkt.size > 0);
         av_packet_unref(&orig_pkt);
     }
 
@@ -330,24 +326,6 @@ int main(int argc, char **argv)
     pcvInitialize();
     pcvSetClockRate(PcvModule_Cpu, 1785000000);
 
-    static const SocketInitConfig socketInitConf = {
-        .bsdsockets_version = 1,
-
-        .tcp_tx_buf_size = 0x8000,
-        .tcp_rx_buf_size = 0x10000,
-        .tcp_tx_buf_max_size = 0x40000,
-        .tcp_rx_buf_max_size = 0x40000,
-
-        .udp_tx_buf_size = 0xA2400,
-        .udp_rx_buf_size = 0xAA500,
-
-        .sb_efficiency = 4,
-
-        .serialized_out_addrinfos_max_size = 0x1000,
-        .serialized_out_hostent_max_size = 0x200,
-        .bypass_nsd = false,
-        .dns_timeout = 0,
-    };
     socketInitialize(&socketInitConf);
 
     nxlinkStdio();
