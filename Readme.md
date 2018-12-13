@@ -4,11 +4,11 @@ This is a homebrew that enables streaming of PC games to the Nintendo Switch.
 
 Have you ever been told by your parents that spending hours sitting in front of a PC was bad for you (like I was)? Well, now you can play your games portably anywhere in your house!
 
-This project is fairly new, so please do not consider it totally stable. If you encounter serious issues, feel free to submit them.
+This project is fairly new, so please do not consider it totally stable. If you encounter issues, feel free to submit them.
 
 ## Features:
   * Stream PC screen to a Nintendo Switch in your local network
-    * 720p (full Switch display resolution)
+    * 720p (full Switch-Tablet display resolution)
     * 40-60 FPS (if not see Troubleshooting)
     * Low delay (again, see Troubleshooting)
   * Capture controller input on Nintendo Switch
@@ -16,13 +16,13 @@ This project is fairly new, so please do not consider it totally stable. If you 
   * PC app offers picture quality adjustments
 
 ## How to Use
-If you do not want to build by yourself, have a look at the [releases page](https://github.com/jakibaki/In-Home-Switching/releases). There you can find the App for the Switch as well as the corresponding PC companion app.
+If you do not want to build by yourself, have a look at the [releases page](https://github.com/jakibaki/In-Home-Switching/releases). There you can find an Archive with the App for the Switch as well as the corresponding PC companion app. For the PC App, just execute In-Home-Switching.exe in the Windows directory after unzipping. 
 
 On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) must also be installed (just unzip and execute `Driver Installer/ScpDriverInstaller.exe`). Otherwise the program will crash silently.
 
-*Also please set your PC resolution to 1280x720p in Windows for getting better performance of screen capturing while running the app.*
+*Also please set your PC resolution to 1280x720p in Windows for getting **much** better performance of screen capturing while running the app.*
 
-For the Switch, find out its IP address (in the Internet settings) and start the app with your Switch CFW. Then type in the Switch's IP address on the PC app and hit the Connect button.
+On the Switch, find out its IP address (in the Internet settings) and start the app with your Switch CFW. Then type in the Switch's IP address on the PC app and hit the `Connect` button.
 
 ## Screenshots from Nintendo Switch
 
@@ -57,7 +57,8 @@ Everything else will follow here in short time (ask jakibaki on AtlasNX discord 
 
 ### *Nice videos, but sadly that delay makes it unplayable*
 
-If you are experiencing delays greater than 0.1 seconds, either your PC is just to slow for your chosen quality options (try worsening image quality) or your local network is bad. Basically we need instant data transfer in your network to work properly (this has nothing to do with throughput, just latency).
+If you are experiencing delays greater than 0.1 seconds, either your PC is just to slow for your chosen quality options (try worsening image quality) or your local network is bad. Basically we need instant data transfer in your network to work properly (this has nothing to do with throughput, just latency).  
+Some WiFi-routers unfortunately just aren't up to the task.
 
 ### *These framedrops hurt my eyes!*
 
@@ -75,7 +76,7 @@ This code is licensed GPLv3 and this has a reason: We do not want to see (or rea
 
 * [ffmpeg](https://www.ffmpeg.org/) for being such a powerful media tool that we use on PC and Switch.
 * [SwitchBrew](https://switchbrew.org/) for libNX and its ffmpeg inclusion
-* [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere) and [Kosmos](https://github.com/AtlasNX/Kosmos) for being such great Switch CFWs
+* [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere) for being such a great Switch CFW
 * [Captura](https://github.com/MathewSachin/Captura) for showing us how to capture frame input with Windows Duplication API
 * [simontime](https://github.com/switch-stuff/switch-usb-screen-stream-sharp) for his switch-usb-screen-stream-sharp project for Windows
 * [ScpDriverInterface](https://github.com/mogzol/ScpDriverInterface/) for the Xbox drivers on Windows
