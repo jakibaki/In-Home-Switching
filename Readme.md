@@ -20,7 +20,7 @@ If you do not want to build by yourself, have a look at the [releases page](http
 
 On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) must also be installed (just unzip and execute `Driver Installer/ScpDriverInstaller.exe`). Otherwise the program will crash silently.
 
-*Also please set your PC resolution to 1280x720p in Windows for getting better performance of screen capturing.*
+*Also please set your PC resolution to 1280x720p in Windows for getting better performance of screen capturing while running the app.*
 
 For the Switch, find out its IP address (in the Internet settings) and start the app with your Switch CFW. Then type in the Switch's IP address on the PC app and hit the Connect button.
 
@@ -29,7 +29,7 @@ For the Switch, find out its IP address (in the Internet settings) and start the
 MISSING
 
 ## Current Limitations
-  * Only works with Windows 8 and newer
+  * Only works with Windows 8 (64-bit) and newer
   * No audio support atm
   * No support for Switch CFW other than [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere) or [Kosmos](https://github.com/AtlasNX/Kosmos)
 
@@ -38,6 +38,7 @@ MISSING
   * Multi-controller support
   * Showing Switch IP in-app
   * More efficient threading
+  * GPU encoding on PC
 
 ## Build instructions
 
@@ -47,15 +48,15 @@ MISSING
 
 ### *Nice videos, but sadly that delay makes it unplayable*
 
-If you are experiencing delays greater than 0.1 seconds, either your PC is just to slow for your chosen quality options (try GPU encoding, worse image quality) or your local network is bad. Basically we need instant transfer in the network (this has nothing to do with throughput, just latency)
+If you are experiencing delays greater than 0.1 seconds, either your PC is just to slow for your chosen quality options (try worsening image quality) or your local network is bad. Basically we need instant data transfer in your network to work properly (this has nothing to do with throughput, just latency).
 
 ### *These framedrops hurt my eyes!*
 
-Your PC is probably to slow for encoding with the games/applications on. Try other applications, lower image quality, set your PC screen resolution to 1280x720p (saves scaling) and try changing the GPU usage setting.
+Your PC is probably to slow for encoding with the games/applications on. Try other applications, lower image quality and, if you haven't already, set your PC screen resolution to 1280x720p (saves scaling).
 
 ### *No drops, but my framerate is just very low*
 
-Well, in our tests we had 60 FPS on Windows 10 with lower image quality... I guess you can try the same strategies as for fixing framedrops, I hope that helps.
+Well, in our tests we had 60 FPS on Windows 10 with low image quality... I guess you can try the same strategies as for fixing framedrops, I hope that helps.
 
 ## License
 
