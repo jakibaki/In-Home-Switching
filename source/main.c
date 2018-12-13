@@ -129,8 +129,6 @@ static int decode_packet(int *got_frame, int cached)
 
             //memcpy(fbuf, rgbframe->data[0], 1280 * 720 * 4);
 
-
-            handleInput();
             gfxFlushBuffers();
             gfxSwapBuffers();
         }
@@ -202,7 +200,6 @@ int handleVid()
     int ret = 0;
     int got_frame;
 
-    handleInput(); // Ensures that gamepad-connection happens before ffmpeg
     // setting TCP input options
     AVDictionary *opts = 0;
     av_dict_set(&opts, "listen", "1", 0); // set option for listening
@@ -321,15 +318,28 @@ end:
     return ret;
 }
 
+void inputHandlerLoop(void* dummy)
+{
+    while(appletMainLoop())
+    {
+        handleInput();
+        svcSleepThread(23333333);
+    }
+}
+
 int main(int argc, char **argv)
 {
     pcvInitialize();
     pcvSetClockRate(PcvModule_Cpu, 1785000000);
-
     socketInitialize(&socketInitConf);
 
     nxlinkStdio();
     gfxInitDefault();
+
+    static Thread inputHandlerThread;
+    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 0);
+    threadStart(&inputHandlerThread);
+
 
     avformat_network_init();
 
