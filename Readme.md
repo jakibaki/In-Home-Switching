@@ -24,14 +24,21 @@ On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/downl
 
 For the Switch, find out its IP address (in the Internet settings) and start the app with your Switch CFW. Then type in the Switch's IP address on the PC app and hit the Connect button.
 
-## Screenshots
+## Screenshots from Nintendo Switch
 
-MISSING
+![Track Mania](screenshots/TrackMania.jpg "Track Mania on Switch")
+![Witcher 3](screenshots/witcher.jpg "Witcher 3 on Switch")
+![PC companion app](screenshots/PCApp.jpg "PC app for streaming screen")
+
 
 ## Current Limitations
   * Only works with Windows 8 (64-bit) and newer
   * No audio support atm
   * No support for Switch CFW other than [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere) or [Kosmos](https://github.com/AtlasNX/Kosmos)
+
+## Known issues
+  * So far Switch crashes when put to sleep with app running (please close app beforehand, we have not fixed this issue yet)
+  * App breaks when Switch changes from docked to handheld mode or vice-versa. Please quit the app before doing so.
 
 ## Scheduled for Future Releases
   * Stream PC audio to Switch
@@ -42,7 +49,9 @@ MISSING
 
 ## Build instructions
 
-MISSING
+Use the PKGBUILD from [here](https://github.com/jakibaki/pacman-packages/tree/ffmpeg_networking/switch/ffmpeg) for ffmpeg on Switch with more protocols enabled.
+
+Everything else will follow here in short time (ask jakibaki on AtlasNX discord if necessary).
 
 ## Troubleshooting
 
