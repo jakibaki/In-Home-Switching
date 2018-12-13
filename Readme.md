@@ -18,7 +18,7 @@ This project is fairly new, so please do not consider it totally stable. If you 
 ## How to Use
 If you do not want to build by yourself, have a look at the [releases page](https://github.com/jakibaki/In-Home-Switching/releases). There you can find the App for the Switch as well as the corresponding PC companion app.
 
-On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) should also be installed (just unzip and execute `Driver Installer/ScpDriverInstaller.exe`).
+On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) must also be installed (just unzip and execute `Driver Installer/ScpDriverInstaller.exe`). Otherwise the program will crash silently.
 
 *Also please set your PC resolution to 1280x720p in Windows for getting better performance of screen capturing.*
 
