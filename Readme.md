@@ -20,7 +20,7 @@ If you do not want to build by yourself, have a look at the [releases page](http
 
 On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) should also be installed (just unzip and execute `Driver Installer/ScpDriverInstaller.exe`).
 
-On your Switch, find out its IP (in the Internet settings) and start the app with your Switch CFW. Type in the IP on the PC app and Link start!
+On your Switch, find out its IP (in the Internet settings) and start the app with your Switch CFW. Then type in the IP on the PC app and hit Connect.
 
 ## Screenshots
 
