@@ -37,7 +37,7 @@
 #include <libswscale/swscale.h>
 
 #include <switch.h>
-#include <input.h>
+#include "input.h"
 
 static AVFormatContext *fmt_ctx = NULL;
 static AVCodecContext *video_dec_ctx = NULL; //, *audio_dec_ctx;
@@ -207,7 +207,7 @@ int handleVid()
     int got_frame;
 
 #define URL "tcp://0.0.0.0:2222"
-
+    handleInput(); // Ensures that gamepad-connection happens before ffmpeg
     // setting TCP input options
     AVDictionary *opts = 0;
     av_dict_set(&opts, "listen", "1", 0); // set option for listening

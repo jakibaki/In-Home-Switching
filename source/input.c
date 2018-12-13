@@ -19,7 +19,28 @@ struct JoyPkg
 int lissock = -1;
 int sock = -1;
 
-int handleInput()
+void gamePadSend()
+{
+
+    hidScanInput();
+
+    JoystickPosition lJoy;
+    JoystickPosition rJoy;
+    struct JoyPkg pkg;
+    pkg.heldKeys = hidKeysHeld(CONTROLLER_P1_AUTO);
+    hidJoystickRead(&lJoy, CONTROLLER_P1_AUTO, JOYSTICK_LEFT);
+    hidJoystickRead(&rJoy, CONTROLLER_P1_AUTO, JOYSTICK_RIGHT);
+    pkg.lJoyX = lJoy.dx;
+    pkg.lJoyY = lJoy.dy;
+    pkg.rJoyX = rJoy.dx;
+    pkg.rJoyY = rJoy.dy;
+    if (send(sock, &pkg, sizeof(pkg), 0) != sizeof(pkg))
+    {
+        sock = -1;
+    }
+}
+
+void handleInput()
 {
     if (lissock == -1)
     {
@@ -64,23 +85,3 @@ int handleInput()
         gamePadSend();
 }
 
-void gamePadSend()
-{
-
-    hidScanInput();
-
-    JoystickPosition lJoy;
-    JoystickPosition rJoy;
-    struct JoyPkg pkg;
-    pkg.heldKeys = hidKeysHeld(CONTROLLER_P1_AUTO);
-    hidJoystickRead(&lJoy, CONTROLLER_P1_AUTO, JOYSTICK_LEFT);
-    hidJoystickRead(&rJoy, CONTROLLER_P1_AUTO, JOYSTICK_RIGHT);
-    pkg.lJoyX = lJoy.dx;
-    pkg.lJoyY = lJoy.dy;
-    pkg.rJoyX = rJoy.dx;
-    pkg.rJoyY = rJoy.dy;
-    if (send(sock, &pkg, sizeof(pkg), 0) != sizeof(pkg))
-    {
-        sock = -1;
-    }
-}
