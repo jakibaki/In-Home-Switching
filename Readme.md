@@ -13,12 +13,12 @@ This project is fairly new, so please do not consider it totally stable. If you 
     * 720p (full Switch display resolution)
     * 40-60 FPS (if not see Troubleshooting)
     * Low delay (again, see Troubleshooting)
-  * Capture Input on Switch
+  * Capture controller input on Switch
     * Emulate an Xbox controller on the PC
   * PC app offers picture quality adjustments
 
 ## How to Use
-If you do not want to build by yourself, have a look at the [Releases page](https://github.com/jakibaki/In-Home-Switching/releases). You also need the companion app on your PC (Win 8 or later) which you can grab [here]( MISSING LINK ).
+If you do not want to build by yourself, have a look at the [releases page](https://github.com/jakibaki/In-Home-Switching/releases). You also need the companion app on your PC (Win 8 or later) which you can grab [here]( MISSING LINK ).
 Just start the App with your Switch CFW. You are then told an IP that you have to type in the PC app for connecting. Link start!
 
 ## Screenshots
@@ -28,7 +28,7 @@ MISSING
 ## Current Limitations
   * Only works with Windows 8 and newer
   * No audio support atm
-  * No support for Switch CFW other than [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere)
+  * No support for Switch CFW other than [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere) or [Kosmos](https://github.com/AtlasNX/Kosmos)
 
 ## Scheduled for Future Releases
   * Stream PC audio to Switch
@@ -43,7 +43,7 @@ MISSING
 
 ### *Nice videos, but sadly that delay makes it unplayable*
 
-If you are experiencing delays greater than 0.1 seconds, either your PC is just to slow for your chosen quality options (try GPU encoding, worse image quality) or your local network is bad. Basically we need instant transfer in the network (this has nothing to do with troughput, just latency)
+If you are experiencing delays greater than 0.1 seconds, either your PC is just to slow for your chosen quality options (try GPU encoding, worse image quality) or your local network is bad. Basically we need instant transfer in the network (this has nothing to do with throughput, just latency)
 
 ### *These framedrops hurt my eyes!*
 
@@ -61,5 +61,5 @@ This code is licensed GPLv3 and this has a reason: We do not want to see (or rea
 
 * [ffmpeg](https://www.ffmpeg.org/) for being such a powerful media tool that we use on PC and Switch.
 * [SwitchBrew](https://switchbrew.org/) for libNX and its ffmpeg inclusion
-* [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere) for being a great Switch CFW
+* [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere) and [Kosmos](https://github.com/AtlasNX/Kosmos) for being such great Switch CFWs
 * [Captura](https://github.com/MathewSachin/Captura) for showing us how to capture frame input with Windows Duplication API
