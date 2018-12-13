@@ -4,8 +4,6 @@ This is a homebrew that enables streaming of PC games to the Nintendo Switch.
 
 Have you ever been told by your parents that spending hours sitting in front of a PC was bad for you (like I was)? Well, now you can play your games portably anywhere in your house!
 
-You can find the corresponding repo for the PC app [here]( MISSING LINK ).
-
 This project is fairly new, so please do not consider it totally stable. If you encounter serious issues, feel free to submit them.
 
 ## Features:
@@ -18,8 +16,11 @@ This project is fairly new, so please do not consider it totally stable. If you 
   * PC app offers picture quality adjustments
 
 ## How to Use
-If you do not want to build by yourself, have a look at the [releases page](https://github.com/jakibaki/In-Home-Switching/releases). You also need the companion app on your PC (Win 8 or later) which you can grab [here]( MISSING LINK ).
-Just start the App with your Switch CFW. You are then told an IP that you have to type in the PC app for connecting. Link start!
+If you do not want to build by yourself, have a look at the [releases page](https://github.com/jakibaki/In-Home-Switching/releases). There you can find the App for the Switch as well as the corresponding PC companion App.
+
+On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) should also be installed (just unzip and execute `Driver Installer/ScpDriverInstaller.exe`).
+
+On your Switch, find out its IP (in the Internet settings) and start the App with your Switch CFW. Type in the IP on the PC app and hit Link start!
 
 ## Screenshots
 
@@ -33,6 +34,7 @@ MISSING
 ## Scheduled for Future Releases
   * Stream PC audio to Switch
   * Multi-controller support
+  * Showing Switch IP in-App
   * More efficient threading
 
 ## Build instructions
@@ -63,3 +65,5 @@ This code is licensed GPLv3 and this has a reason: We do not want to see (or rea
 * [SwitchBrew](https://switchbrew.org/) for libNX and its ffmpeg inclusion
 * [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere) and [Kosmos](https://github.com/AtlasNX/Kosmos) for being such great Switch CFWs
 * [Captura](https://github.com/MathewSachin/Captura) for showing us how to capture frame input with Windows Duplication API
+* [simontime](https://github.com/switch-stuff/switch-usb-screen-stream-sharp) for his switch-usb-screen-stream-sharp project for Windows
+* [ScpDriverInterface](https://github.com/mogzol/ScpDriverInterface/) for the Xbox drivers on Windows
