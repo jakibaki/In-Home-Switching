@@ -113,10 +113,7 @@ namespace InHomeSwitching.Window
                     frame = desktopDuplicator.GetLatestFrame();
                     break;
                 }
-                catch
-                {
-                    desktopDuplicator = new DesktopDuplicator(0);
-                };
+                catch { desktopDuplicator = new DesktopDuplicator(0); };
             }
 
             resX = frame.DesktopImage.Width;
