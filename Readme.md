@@ -64,12 +64,12 @@ Everything else will follow here in short time (ask jakibaki on AtlasNX discord 
 
 ### *Nice videos, but sadly that delay makes it unplayable*
 
-If you are experiencing delays greater than 0.1 seconds, either your PC is just to slow for your chosen quality options (try worsening image quality) or your local network is bad. Basically we need instant data transfer in your network to work properly (this has nothing to do with throughput, just latency).  
+If you are experiencing delays greater than 0.1 seconds, either your PC is just too slow for your chosen quality options (try worsening image quality) or your local network is bad. Basically we need instant data transfer in your network to work properly (this has nothing to do with throughput, just latency).  
 Some WiFi-routers unfortunately just aren't up to the task.
 
 ### *These framedrops hurt my eyes!*
 
-Your PC is probably to slow for encoding with the games/applications on. Try other applications, lower image quality and, if you haven't already, set your PC screen resolution to 1280x720p (saves scaling).
+Your PC is probably too slow for encoding with the games/applications on. Try other applications, lower image quality and, if you haven't already, set your PC screen resolution to 1280x720p (saves scaling).
 
 ### *No drops, but my framerate is just very low*
 
