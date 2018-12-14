@@ -89,7 +89,7 @@
             this.toggle_button.TabIndex = 10;
             this.toggle_button.Text = "Connect";
             this.toggle_button.UseVisualStyleBackColor = true;
-            this.toggle_button.Click += new System.EventHandler(this.toggle_button_Click);
+            this.toggle_button.Click += new System.EventHandler(this.Toggle_button_Click);
             // 
             // statusStrip1
             // 

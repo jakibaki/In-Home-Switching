@@ -1,21 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.IO;
-using System.Drawing.Imaging;
 
 namespace InHomeSwitching.Window
 {
     public partial class Window : Form
     {
-
         private Streamer streamer;
 
         public Window()
@@ -31,7 +20,7 @@ namespace InHomeSwitching.Window
                 //connect_status.Text = streamer.running.ToString();
                 if (streamer.running)
                 {
-                    connect_status.Text = String.Format("Connected to {0} with bitrate {1}M", streamer.ip, streamer.quality);
+                    connect_status.Text = $"Connected to {streamer.ip} with bitrate {streamer.quality}M";
                     toggle_button.Text = "Disconnect";
                     quality_bar.Enabled = false;
                     
@@ -48,28 +37,19 @@ namespace InHomeSwitching.Window
         }
 
 
-        private void toggle_button_Click(object sender, EventArgs e)
+        private void Toggle_button_Click(object sender, EventArgs e)
         {
             if (streamer.started)
-            {
                 streamer.Stop();
-            }
             else
             {
-                if (ip_box.Text != "")
-                {
+                if (ip_box.Text != string.Empty)
                     streamer.Start(ip_box.Text, quality_bar.Value);
-                }
                 else
-                {
                     MessageBox.Show("Please enter the IP-Address of your switch!");
-                }
             }
         }
 
-        private void Window_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            System.Environment.Exit(1);
-        }
+        private void Window_FormClosed(object sender, FormClosedEventArgs e) => Environment.Exit(0);
     }
 }
