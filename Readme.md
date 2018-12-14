@@ -46,9 +46,11 @@ This app uses core overclocking to 1785 MHz on the Nintendo Switch. We use this 
 
 ## Scheduled for Future Releases
   * Stream PC audio to Switch
+  * Option to disable Switch Overclocking
   * MacOS and Linux Support
-  * Multi-controller support
   * Showing Switch IP in-app
+  * Multi-controller support
+  * Mouse emulation
   * More efficient threading
   * GPU encoding on PC
 
