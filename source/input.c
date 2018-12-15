@@ -8,6 +8,8 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 
+#include "input.h"
+
 struct JoyPkg
 {
     unsigned long heldKeys;
