@@ -33,16 +33,15 @@
 */
 
 
-#include <libavutil/imgutils.h>
 #include <libavutil/samplefmt.h>
-#include <libavutil/timestamp.h>
-#include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 
 #include <switch.h>
 
 #include "input.h"
 #include "video.h"
+#include "network.h"
+#include "renderer.h"
 
 static const SocketInitConfig socketInitConf = {
     .bsdsockets_version = 1,
@@ -64,45 +63,45 @@ static const SocketInitConfig socketInitConf = {
 };
 
 
-void drawSplash()
+void switchInit() 
 {
-    FILE* img = fopen("romfs:/splash.rgba", "rb");
-    u8 *fbuf = gfxGetFramebuffer(NULL, NULL);
-    fread(fbuf, 1280*720*4, 1, img);
-    fclose(img);
-    gfxFlushBuffers();
-    gfxSwapBuffers();
+    pcvInitialize();
+    pcvSetClockRate(PcvModule_Cpu, 1785000000);
+    romfsInit();
+    gfxInitDefault();
+    networkInit(&socketInitConf);
+}
+
+void switchDestroy()
+{
+    networkDestroy();
+    gfxExit();
+    pcvExit();
+}
+
+void startInput() 
+{
+    static Thread inputHandlerThread;
+    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 0);
+    threadStart(&inputHandlerThread);
 }
 
 int main(int argc, char **argv)
 {
-    pcvInitialize();
-    pcvSetClockRate(PcvModule_Cpu, 1785000000);
-    socketInitialize(&socketInitConf);
-    romfsInit();
-    nxlinkStdio();
-    gfxInitDefault();
+    /* Init all switch required systems */
+    switchInit();
 
-    static Thread inputHandlerThread;
-    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 0);
-    threadStart(&inputHandlerThread);
+    /* Run input handling in background */
+    startInput();
 
-    int ret = avformat_network_init();
-    if (ret < 0)
-    {
-        char errbuf[100];
-        av_strerror(ret, errbuf, 100);
-        fprintf(stderr, "Initialize Error %s\n", errbuf);
-    }
+    /* Main thread should not be runing the main loop */
+    /* It should wait all its workers with thread join */
     while (appletMainLoop())
     {
-        drawSplash();
+        drawSplash("romfs:/splash.rgba");
         handleVid();
     }
 
-    avformat_network_deinit();
-
-    gfxExit();
-    pcvExit();
-    socketExit();
+    /* Deinitialize all used systems */
+    switchDestroy();
 }

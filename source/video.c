@@ -2,7 +2,6 @@
 #include <libavutil/samplefmt.h>
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
 
 #include <switch.h>
 
@@ -17,17 +16,15 @@ static uint8_t *video_dst_data[4] = {NULL};
 static int video_dst_linesize[4];
 static int video_dst_bufsize;
 static int video_stream_idx = -1; //, audio_stream_idx = -1;
-static AVFrame *frame = NULL;
 static AVFrame *rgbframe = NULL;
-static struct SwsContext *ctx_sws = NULL;
 static AVPacket pkt;
 static int video_frame_count = 0;
 //static int audio_frame_count = 0;
 
-#define URL "tcp://0.0.0.0:2222"
-//#define TCP_RECV_BUFFER "500000"
+#include "network.h"
+#include "renderer.h"
 
-static int decode_packet(int *got_frame, int cached)
+static int decode_packet(AVFrame* frame, int *got_frame, int cached)
 {
     int ret = 0;
     *got_frame = 0;
@@ -62,20 +59,7 @@ static int decode_packet(int *got_frame, int cached)
             {
                 printf("%d\n", video_frame_count);
             }
-
-            if (ctx_sws == NULL)
-                ctx_sws = sws_getContext(frame->width, frame->height, pix_fmt, frame->width, frame->height, AV_PIX_FMT_RGBA, SWS_BILINEAR, 0, 0, 0);
-
-            u8 *fbuf = gfxGetFramebuffer(NULL, NULL);
-
-            
-            // We're scaling "into" the framebuffer for performance reasons.
-            sws_scale(ctx_sws, (const uint8_t *)frame->data, frame->linesize, 0, frame->height, &fbuf, rgbframe->linesize);
-
-            //memcpy(fbuf, rgbframe->data[0], 1280 * 720 * 4);
-
-            gfxFlushBuffers();
-            gfxSwapBuffers();
+            drawFrame(frame, rgbframe, pix_fmt);
         }
     }
     return ret;
@@ -141,9 +125,9 @@ static int open_codec_context(int *stream_idx,
 
 int handleVid()
 {
-
     int ret = 0;
-    int got_frame;
+    int got_frame = 0;
+    AVFrame* frame;
 
     // setting TCP input options
     AVDictionary *opts = 0;
@@ -152,7 +136,6 @@ int handleVid()
     //av_dict_set(&opts, "recv_buffer_size", TCP_RECV_BUFFER, 0);       // set option for size of receive buffer
 
     //open input file, and allocate format context
-    fprintf(stderr, "Allocating format context\n");
     ret = avformat_open_input(&fmt_ctx, URL, 0, &opts);
     if (ret < 0)
     {
@@ -162,7 +145,6 @@ int handleVid()
         fprintf(stderr, "Input Error %s\n", errbuf);
         goto end;
     }
-    fprintf(stdout, "Allocating format context succesfull\n");
 
     //retrieve stream information
 
@@ -227,13 +209,12 @@ int handleVid()
     pkt.size = 0;
 
     //read frames from the file
-
     while (av_read_frame(fmt_ctx, &pkt) >= 0)
     {
         AVPacket orig_pkt = pkt;
         do
         {
-            ret = decode_packet(&got_frame, 0);
+            ret = decode_packet(frame, &got_frame, 0);
             if (ret < 0)
                 break;
             pkt.data += ret;
@@ -244,12 +225,11 @@ int handleVid()
     }
 
     //flush cached frames
-
     pkt.data = NULL;
     pkt.size = 0;
     do
     {
-        decode_packet(&got_frame, 1);
+        decode_packet(frame, &got_frame, 1);
     } while (got_frame);
 
     printf("Demuxing succeeded.\n");
