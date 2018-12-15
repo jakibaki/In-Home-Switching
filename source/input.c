@@ -89,3 +89,11 @@ void handleInput()
         gamePadSend();
 }
 
+void inputHandlerLoop(void* dummy)
+{
+    while(appletMainLoop())
+    {
+        handleInput();
+        svcSleepThread(23333333);
+    }
+}
