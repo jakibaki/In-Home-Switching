@@ -3,14 +3,12 @@
 
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
-#include <switch.h>
 
-typedef struct {
-    struct SwsContext *ctx_sws;
-    u8* gfxBuffer;
-} RenderContext;
+#include "context.h"
 
-void drawSplash(const char* splashPath);
-void drawFrame(AVFrame* frame, AVFrame* rgbframe, enum AVPixelFormat pix_fmt);
+RenderContext* createRenderer(void);
+void drawSplash(RenderContext* context, const char* splashPath);
+void drawFrame(RenderContext* context, VideoContext* videoContext);
+void freeRenderer(RenderContext* context);
 
 #endif

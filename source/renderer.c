@@ -3,31 +3,38 @@
 #include <switch.h>
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
-
-RenderContext renderContext;
+#include "video.h"
 
 void flushSwapBuffers(void);
 
-void drawSplash(const char* splashPath)
+RenderContext* createRenderer()
+{
+    RenderContext* context = (RenderContext*)malloc(sizeof(RenderContext));
+    context->ctx_sws = NULL;
+    return context;
+}
+
+void drawSplash(RenderContext* context, const char* splashPath)
 {
     FILE* img = fopen(splashPath, "rb");
-    renderContext.gfxBuffer = gfxGetFramebuffer(NULL, NULL);
-    fread(renderContext.gfxBuffer, 1280*720*4, 1, img);
+    context->gfxBuffer = gfxGetFramebuffer(NULL, NULL);
+    fread(context->gfxBuffer, 1280*720*4, 1, img);
     fclose(img);
     flushSwapBuffers();
 }
 
-void drawFrame(AVFrame* frame, AVFrame* rgbframe, enum AVPixelFormat pix_fmt) 
+void drawFrame(RenderContext* context, VideoContext* videoContext) 
 {
-    if (renderContext.ctx_sws == NULL)
-        renderContext.ctx_sws = sws_getContext(frame->width, frame->height, pix_fmt, frame->width, frame->height, AV_PIX_FMT_RGBA, SWS_BILINEAR, 0, 0, 0);
+    AVFrame* frame = videoContext->frame;
+    AVFrame* rgbframe = videoContext->rgbframe;
+    enum AVPixelFormat pix_fmt = videoContext->video_dec_ctx->pix_fmt;
 
-    // Reuse gfxBuffer
-    if (renderContext.gfxBuffer == NULL)
-        renderContext.gfxBuffer = gfxGetFramebuffer(NULL, NULL);
-
+    if (context->ctx_sws == NULL) 
+        context->ctx_sws = sws_getContext(frame->width, frame->height, pix_fmt, frame->width, frame->height, AV_PIX_FMT_RGBA, SWS_BILINEAR, 0, 0, 0);
+    
     // We're scaling "into" the framebuffer for performance reasons.
-    sws_scale(renderContext.ctx_sws, frame->data, frame->linesize, 0, frame->height, &(renderContext.gfxBuffer), rgbframe->linesize);
+    context->gfxBuffer = gfxGetFramebuffer(NULL, NULL);
+    sws_scale(context->ctx_sws, frame->data, frame->linesize, 0, frame->height, &(context->gfxBuffer), rgbframe->linesize);
 
     //memcpy(fbuf, rgbframe->data[0], 1280 * 720 * 4);
 
@@ -38,4 +45,8 @@ void flushSwapBuffers()
 {
     gfxFlushBuffers();
     gfxSwapBuffers();
+}
+
+void freeRenderer(RenderContext* context) {
+    free(context);
 }

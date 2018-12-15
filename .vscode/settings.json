@@ -2,6 +2,9 @@
     "files.associations": {
       "imgutils.h": "c",
       "fcntl.h": "c",
-      "renderer.h": "c"
+      "renderer.h": "c",
+      "network.h": "c",
+      "input.h": "c",
+      "context.h": "c"
     }
 }

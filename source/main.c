@@ -38,6 +38,7 @@
 
 #include <switch.h>
 
+#include "context.h"
 #include "input.h"
 #include "video.h"
 #include "network.h"
@@ -88,8 +89,14 @@ void startInput()
 
 int main(int argc, char **argv)
 {
+    RenderContext* renderContext = NULL;
+    VideoContext* videoContext = NULL;
+    
     /* Init all switch required systems */
     switchInit();
+    renderContext = createRenderer();
+    videoContext = createVideoContext();
+    videoContext->renderContext = renderContext;
 
     /* Run input handling in background */
     startInput();
@@ -98,10 +105,12 @@ int main(int argc, char **argv)
     /* It should wait all its workers with thread join */
     while (appletMainLoop())
     {
-        drawSplash("romfs:/splash.rgba");
-        handleVid();
+        drawSplash(renderContext, "romfs:/splash.rgba");
+        handleVid(videoContext);
     }
 
     /* Deinitialize all used systems */
+    freeRenderer(renderContext);
+    // freeVideoContext(videoContext);
     switchDestroy();
 }
