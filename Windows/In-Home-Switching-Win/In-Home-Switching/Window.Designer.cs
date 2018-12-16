@@ -1,4 +1,4 @@
-﻿namespace InHomeSwitching.Window
+﻿namespace InHomeSwitching
 {
     partial class Window
     {
@@ -28,8 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.ip_box = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.quality_bar = new System.Windows.Forms.TrackBar();
             this.label3 = new System.Windows.Forms.Label();
             this.toggle_button = new System.Windows.Forms.Button();
@@ -42,30 +40,14 @@
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // ip_box
-            // 
-            this.ip_box.Location = new System.Drawing.Point(72, 131);
-            this.ip_box.Name = "ip_box";
-            this.ip_box.Size = new System.Drawing.Size(199, 20);
-            this.ip_box.TabIndex = 3;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(11, 134);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(55, 13);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "Switch IP:";
-            // 
             // quality_bar
             // 
             this.quality_bar.Cursor = System.Windows.Forms.Cursors.Default;
-            this.quality_bar.Location = new System.Drawing.Point(72, 157);
+            this.quality_bar.Location = new System.Drawing.Point(57, 157);
             this.quality_bar.Maximum = 50;
             this.quality_bar.Minimum = 1;
             this.quality_bar.Name = "quality_bar";
-            this.quality_bar.Size = new System.Drawing.Size(257, 45);
+            this.quality_bar.Size = new System.Drawing.Size(272, 45);
             this.quality_bar.TabIndex = 7;
             this.quality_bar.Tag = "";
             this.quality_bar.TickFrequency = 5;
@@ -74,7 +56,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(24, 166);
+            this.label3.Location = new System.Drawing.Point(9, 166);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(42, 13);
             this.label3.TabIndex = 8;
@@ -83,11 +65,11 @@
             // toggle_button
             // 
             this.toggle_button.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.toggle_button.Location = new System.Drawing.Point(72, 32);
+            this.toggle_button.Location = new System.Drawing.Point(12, 32);
             this.toggle_button.Name = "toggle_button";
-            this.toggle_button.Size = new System.Drawing.Size(199, 77);
+            this.toggle_button.Size = new System.Drawing.Size(311, 77);
             this.toggle_button.TabIndex = 10;
-            this.toggle_button.Text = "Connect";
+            this.toggle_button.Text = "Start Server";
             this.toggle_button.UseVisualStyleBackColor = true;
             this.toggle_button.Click += new System.EventHandler(this.Toggle_button_Click);
             // 
@@ -144,15 +126,12 @@
             this.Controls.Add(this.toggle_button);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.quality_bar);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.ip_box);
             this.MaximumSize = new System.Drawing.Size(351, 261);
             this.MinimumSize = new System.Drawing.Size(351, 261);
             this.Name = "Window";
             this.Opacity = 0.99D;
-            this.Text = "In-Home-Switching v0.1";
+            this.Text = "In-Home-Switching";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Window_FormClosed);
-            this.Shown += new System.EventHandler(this.Window_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.quality_bar)).EndInit();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
@@ -162,8 +141,6 @@
         }
 
         #endregion
-        private System.Windows.Forms.TextBox ip_box;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TrackBar quality_bar;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button toggle_button;

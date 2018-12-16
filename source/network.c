@@ -46,36 +46,34 @@ int connectJoyConSocket(JoyConSocket* connection, int port)
             connection->sock = -1;
         }
 
-        struct sockaddr_in server;
-
-        connection->lissock = socket(AF_INET, SOCK_STREAM, 0);
-        server.sin_family = AF_INET;
-        server.sin_addr.s_addr = INADDR_ANY;
-        server.sin_port = htons(port);
-
-        if (bind(connection->lissock, (struct sockaddr *)&server, sizeof(server)) < 0)
-        {
-            close(connection->lissock);
-            connection->lissock = -1;
-            return 0;
-        }
-
-        listen(connection->lissock, 1);
+        connection->lissock = 1;
     }
 
     if (connection->sock == -1)
     {
-        // TODO: We might want to be able to not block if no client is connected
-        struct sockaddr_in client;
-        int c = sizeof(struct sockaddr_in);
-        connection->sock = accept(connection->lissock, (struct sockaddr *)&client, (socklen_t *)&c);
-        if(connection->sock < 0) {
-            close(connection->lissock);
-            connection->sock = -1;
+        connection->sock = socket(AF_INET, SOCK_STREAM, 0);
+        if (connection->sock < 0) 
+        {
             connection->lissock = -1;
+            connection->sock = -1;
+            printf("Could not create socket\n");
             return 0;
         }
-        printf("Got gamepad-connection\n");
+
+        // Todo: Find the best way for a user to update the server ip  
+        struct sockaddr_in server;
+        server.sin_addr.s_addr = inet_addr("192.168.0.117");
+        server.sin_family = AF_INET;
+        server.sin_port = htons(port);
+
+        int failed = connect(connection->sock, (struct sockaddr *)&server, sizeof(server));
+        if (failed) {
+            connection->sock = -1;
+            connection->lissock = -1;
+            printf("Could not connect socket\n");
+            return 0;
+        }
+        printf("Established gamepad-connection\n");
     }
     return 1;
 }

@@ -7,8 +7,8 @@
     <ProjectGuid>{74CC9032-E6E6-4620-B9B7-36251023A1C9}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DesktopDuplication.Demo</RootNamespace>
-    <AssemblyName>DesktopDuplication.Demo</AssemblyName>
+    <RootNamespace>InHomeSwitching</RootNamespace>
+    <AssemblyName>In-Home-Switching</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
@@ -63,7 +63,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ScpDriverInterface">
@@ -81,6 +81,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Server.cs" />
     <Compile Include="Streamer.cs" />
     <Compile Include="Window.cs">
       <SubType>Form</SubType>
@@ -121,7 +122,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SharpDX">
-      <Version>2.6.3</Version>
+      <Version>4.2.0</Version>
     </PackageReference>
     <PackageReference Include="SharpDX.Direct3D11">
       <Version>4.2.0</Version>

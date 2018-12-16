@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace InHomeSwitching.Window
+namespace InHomeSwitching
 {
     static class Program
     {

@@ -4,46 +4,20 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
-namespace InHomeSwitching.Window
+namespace InHomeSwitching
 {
     internal class Streamer
     {
-        public string ffmpeg_args = "-y -f rawvideo -pixel_format rgb32 -framerate 300 -video_size {0}x{1} -i pipe: -f h264 -vf scale=1280x720 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -profile:v baseline -x264-params \"nal-hrd=cbr\" -b:v {2}M -minrate {2}M -maxrate {2}M -bufsize 2M tcp://{3}:2222 ",
-                      ip;
+        // Properties
+        public bool IsRunning { get; private set; }
+        public string IPAddress { get; private set; }
 
-        public int resX, resY, quality;
-
-        private Thread renderThread = null, inputThread = null;
-
-        public bool running = false, started = false;
-
-        private static DesktopDuplicator desktopDuplicator = new DesktopDuplicator(0);
-
-        private Process proc = null;
-
-        private ScpBus scp = new ScpBus();
-
-        private X360Controller ctrl = new X360Controller();
-
-        private TcpClient client = null;
-
-        private NetworkStream serverStream = null;
-
-        public Streamer()
-        {
-            scp.PlugIn(1);
-
-            var inputRef = new ThreadStart(InputLoop);
-            inputThread = new Thread(inputRef);
-            inputThread.Start();
-
-            var renderRef = new ThreadStart(StreamerLoop);
-            renderThread = new Thread(renderRef);
-            renderThread.Start();
-        }
+        public event EventHandler<EventArgs> OnStreamerError = delegate { };
 
         public struct InputPkg
         {
@@ -56,105 +30,168 @@ namespace InHomeSwitching.Window
 
         public enum InputKeys : ulong
         {
-            A     = 1,
-            B     = 1 << 1,
-            X     = 1 << 2,
-            Y     = 1 << 3,
-            LS    = 1 << 4,
-            RS    = 1 << 5,
-            L     = 1 << 6,
-            R     = 1 << 7,
-            ZL    = 1 << 8,
-            ZR    = 1 << 9,
-            Plus  = 1 << 10,
+            A = 1,
+            B = 1 << 1,
+            X = 1 << 2,
+            Y = 1 << 3,
+            LS = 1 << 4,
+            RS = 1 << 5,
+            L = 1 << 6,
+            R = 1 << 7,
+            ZL = 1 << 8,
+            ZR = 1 << 9,
+            Plus = 1 << 10,
             Minus = 1 << 11,
-            Left  = 1 << 12,
-            Up    = 1 << 13,
+            Left = 1 << 12,
+            Up = 1 << 13,
             Right = 1 << 14,
-            Down  = 1 << 15
+            Down = 1 << 15
         }
 
-        public void Start(string ip, int quality)
+        // Members
+        private const string FFMPEGArgs = "-y -f rawvideo -pixel_format rgb32 -framerate 300 -video_size {0}x{1} -i pipe: -f h264 -vf scale=1280x720 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -profile:v baseline -x264-params \"nal-hrd=cbr\" -b:v {2}M -minrate {2}M -maxrate {2}M -bufsize 2M tcp://{3}:2222 ";
+        private static DesktopDuplicator desktopDuplicator = new DesktopDuplicator(0);
+
+        private bool started;
+
+        private int resX;
+        private int resY;
+        private int quality;
+
+        private Thread renderThread;
+        private Thread inputThread;
+
+        private TcpClient client;
+        private NetworkStream clientStream;
+
+        private Process ffmpegProc;
+        private ScpBus scp;
+        private X360Controller ctrl = new X360Controller();
+
+        public Streamer(TcpClient switchClient, int streamQuality)
         {
-            if (started)
+            client = switchClient;
+            streamQuality = quality;
+            IPAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
+
+            scp = new ScpBus();
+            scp.PlugIn(1);
+        }
+
+        public void Start()
+        {
+            if (IsRunning)
             {
                 Stop();
-                Thread.Sleep(100);
             }
 
-            this.ip = ip;
-            this.quality = quality;
+            IsRunning = true;
+            StartFFMPEGStreaming();
 
-            InitConnection();
+            // Check the server wasn't stopped while waiting for ffmepg to start
+            if (IsRunning)
+            {
+                var inputRef = new ThreadStart(InputLoop);
+                inputThread = new Thread(inputRef);
+                inputThread.Name = "Input";
+                inputThread.Start();
 
-            started = true;
+                var renderRef = new ThreadStart(RenderLoop);
+                renderThread = new Thread(renderRef);
+                renderThread.Name = "Render";
+                renderThread.Start();
+            }
         }
 
         public void Stop()
         {
+            IsRunning = false;
+
             try { client.Close(); }
             catch { }
 
-            try { proc.Kill(); }
+            try { ffmpegProc.Kill(); }
             catch { }
 
-            started = false;
-            running = false;
+            if (inputThread != null)
+            {
+                inputThread.Join();
+                inputThread = null;
+            }
+
+            if (renderThread != null)
+            {
+                renderThread.Join();
+                renderThread = null;
+            }
         }
 
-        private void InitConnection()
+        private void StopDueToError(Exception e)
+        {
+            if (IsRunning)
+            {
+                new Task(Stop).Start();
+
+                // Todo: Do something with the actual exception (display message to user?)
+                OnStreamerError(this, new EventArgs());
+            }
+        }
+
+        private void StartFFMPEGStreaming()
         {
             DesktopFrame frame = null;
 
-            while (true)
+            while (IsRunning)
             {
                 try
                 {
                     frame = desktopDuplicator.GetLatestFrame();
                     break;
                 }
-                catch { desktopDuplicator = new DesktopDuplicator(0); };
-            }
-
-            resX = frame.DesktopImage.Width;
-            resY = frame.DesktopImage.Height;
-
-            if (proc != null)
-            {
-                try { proc.Kill(); }
-                catch { };
-            }
-
-            proc = new Process()
-            {
-                StartInfo = new ProcessStartInfo()
+                catch
                 {
-                    FileName = "ffmpeg.exe",
-                    Arguments = string.Format(ffmpeg_args, resX, resY, quality, ip),
-                    UseShellExecute = false,
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true
+                    desktopDuplicator = new DesktopDuplicator(0);
                 }
-            };
+            }
 
-            proc.Start();
+            if (frame != null)
+            {
+                resX = frame.DesktopImage.Width;
+                resY = frame.DesktopImage.Height;
+
+                if (ffmpegProc != null)
+                {
+                    try { ffmpegProc.Kill(); }
+                    catch { };
+                }
+
+                ffmpegProc = new Process()
+                {
+                    StartInfo = new ProcessStartInfo()
+                    {
+                        FileName = "ffmpeg.exe",
+                        Arguments = string.Format(FFMPEGArgs, resX, resY, quality, IPAddress),
+                        UseShellExecute = false,
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = true,
+                        CreateNoWindow = true
+                    }
+                };
+
+                ffmpegProc.Start();
+            }
         }
 
-        private unsafe void StreamerLoop()
+        private unsafe void RenderLoop()
         {
             DesktopFrame frame = null;
 
-            while (true)
+            while (IsRunning)
             {
-                if (!started)
+                try
                 {
-                    running = false;
-                    Thread.Sleep(100);
-                    continue;
+                    frame = desktopDuplicator.GetLatestFrame();
                 }
-
-                try { frame = desktopDuplicator.GetLatestFrame(); }
                 catch
                 {
                     desktopDuplicator = new DesktopDuplicator(0);
@@ -165,7 +202,7 @@ namespace InHomeSwitching.Window
 
                 if (resX != frame.DesktopImage.Width || resY != frame.DesktopImage.Height)
                 {
-                    InitConnection();
+                    StartFFMPEGStreaming();
                     continue;
                 }
 
@@ -179,11 +216,13 @@ namespace InHomeSwitching.Window
                 {
                     try
                     {
-                        proc.StandardInput.BaseStream.Flush();
-                        ms.CopyTo(proc.StandardInput.BaseStream);
-                        running = true;
+                        ffmpegProc.StandardInput.BaseStream.Flush();
+                        ms.CopyTo(ffmpegProc.StandardInput.BaseStream);
                     }
-                    catch { Stop(); }
+                    catch(Exception e)
+                    {
+                        StopDueToError(e);
+                    }
 
                     frame.DesktopImage.UnlockBits(bData);
                 }
@@ -192,69 +231,71 @@ namespace InHomeSwitching.Window
 
         private void InputLoop()
         {
-            while (true)
+            while (IsRunning)
             {
-                if (!started)
-                {
-                    Thread.Sleep(100);
-                    continue;
-                }
-
                 try
                 {
-                    client = new TcpClient();
-                    client.Connect(ip, 2223);
-                    serverStream = client.GetStream();
-                    serverStream.ReadTimeout = 2000;
+                    clientStream = client.GetStream();
+                    clientStream.ReadTimeout = 2000;
                 }
-                catch { continue; }
+                catch (Exception e)
+                {
+                    StopDueToError(e);
+                }
 
-                while (true)
+                while (IsRunning)
                 {
                     InputPkg pkg;
 
-                    try { pkg = ReadPkg(); }
-                    catch { break; }
+                    try
+                    {
+                        pkg = ReadPkg();
+                    }
+                    catch (Exception e)
+                    {
+                        StopDueToError(e);
+                        break;
+                    }
 
                     void map(InputKeys inkey, X360Buttons outkey)
                     {
                         if ((pkg.HeldKeys & (ulong)inkey) > 0)
-                            ctrl.Buttons  |= outkey;
+                            ctrl.Buttons |= outkey;
                         else ctrl.Buttons &= ~outkey;
                     }
 
-                    map(InputKeys.A,     X360Buttons.B);
-                    map(InputKeys.B,     X360Buttons.A);
-                    map(InputKeys.X,     X360Buttons.Y);
-                    map(InputKeys.Y,     X360Buttons.X);
-                                         
-                    map(InputKeys.L,     X360Buttons.LeftBumper);
-                    map(InputKeys.R,     X360Buttons.RightBumper);
+                    map(InputKeys.A, X360Buttons.B);
+                    map(InputKeys.B, X360Buttons.A);
+                    map(InputKeys.X, X360Buttons.Y);
+                    map(InputKeys.Y, X360Buttons.X);
 
-                    map(InputKeys.LS,    X360Buttons.LeftStick);
-                    map(InputKeys.RS,    X360Buttons.RightStick);
+                    map(InputKeys.L, X360Buttons.LeftBumper);
+                    map(InputKeys.R, X360Buttons.RightBumper);
 
-                    map(InputKeys.Plus,  X360Buttons.Start);
+                    map(InputKeys.LS, X360Buttons.LeftStick);
+                    map(InputKeys.RS, X360Buttons.RightStick);
+
+                    map(InputKeys.Plus, X360Buttons.Start);
                     map(InputKeys.Minus, X360Buttons.Back);
 
-                    map(InputKeys.Up,    X360Buttons.Up);
-                    map(InputKeys.Down,  X360Buttons.Down);
-                    map(InputKeys.Left,  X360Buttons.Left);
+                    map(InputKeys.Up, X360Buttons.Up);
+                    map(InputKeys.Down, X360Buttons.Down);
+                    map(InputKeys.Left, X360Buttons.Left);
                     map(InputKeys.Right, X360Buttons.Right);
 
                     if ((pkg.HeldKeys & (ulong)InputKeys.ZL) > 0)
-                        ctrl.LeftTrigger   = byte.MaxValue;
-                    else ctrl.LeftTrigger  = byte.MinValue;
+                        ctrl.LeftTrigger = byte.MaxValue;
+                    else ctrl.LeftTrigger = byte.MinValue;
 
                     if ((pkg.HeldKeys & (ulong)InputKeys.ZR) > 0)
-                        ctrl.RightTrigger  = byte.MaxValue;
+                        ctrl.RightTrigger = byte.MaxValue;
                     else ctrl.RightTrigger = byte.MinValue;
 
-                    ctrl.LeftStickX        = pkg.LJoyX;
-                    ctrl.LeftStickY        = pkg.LJoyY;
-                                           
-                    ctrl.RightStickX       = pkg.RJoyX;
-                    ctrl.RightStickY       = pkg.RJoyY;
+                    ctrl.LeftStickX = pkg.LJoyX;
+                    ctrl.LeftStickY = pkg.LJoyY;
+
+                    ctrl.RightStickX = pkg.RJoyX;
+                    ctrl.RightStickY = pkg.RJoyY;
 
                     scp.Report(1, ctrl.GetReport());
                 }
@@ -266,13 +307,13 @@ namespace InHomeSwitching.Window
             var buf = new byte[0x10];
             var pkg = new InputPkg();
 
-            serverStream.Read(buf, 0, 0x10);
+            clientStream.Read(buf, 0, 0x10);
 
             pkg.HeldKeys = BitConverter.ToUInt64(buf, 0);
-            pkg.LJoyX    = BitConverter.ToInt16(buf, 8);
-            pkg.LJoyY    = BitConverter.ToInt16(buf, 10);
-            pkg.RJoyX    = BitConverter.ToInt16(buf, 12);
-            pkg.RJoyY    = BitConverter.ToInt16(buf, 14);
+            pkg.LJoyX = BitConverter.ToInt16(buf, 8);
+            pkg.LJoyY = BitConverter.ToInt16(buf, 10);
+            pkg.RJoyX = BitConverter.ToInt16(buf, 12);
+            pkg.RJoyY = BitConverter.ToInt16(buf, 14);
 
             return pkg;
         }

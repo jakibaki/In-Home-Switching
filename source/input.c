@@ -25,7 +25,7 @@ void gamePadSend(JoyConSocket* connection)
 
 void handleInput(JoyConSocket* connection)
 {
-    if(connectJoyConSocket(connection, 2223))
+    if (connectJoyConSocket(connection, 2223))
         gamePadSend(connection);
 }
 

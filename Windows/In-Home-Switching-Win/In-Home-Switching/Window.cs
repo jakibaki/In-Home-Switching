@@ -1,55 +1,69 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace InHomeSwitching.Window
+namespace InHomeSwitching
 {
     public partial class Window : Form
     {
-        private Streamer streamer;
+        private Server server;
 
         public Window()
         {
-            streamer = new Streamer();
             InitializeComponent();
+
+            // Update the window title with the product and version number
+            Text = $"{Application.ProductName} v{Application.ProductVersion}";
+
+            // Create a new streaming server that will listen for connections and stream video to clients
+            server = new Server();
+            server.OnClientUpdate += Server_OnClientUpdate;
+            server.OnServerError += Server_OnServerError;
+            UpdateUI();
         }
 
-        private void Window_Shown(object sender, EventArgs e)
+        private void Window_FormClosed(object sender, FormClosedEventArgs e)
         {
-            while (true)
-            {
-                //connect_status.Text = streamer.running.ToString();
-                if (streamer.running)
-                {
-                    connect_status.Text = $"Connected to {streamer.ip} with bitrate {streamer.quality}M";
-                    toggle_button.Text = "Disconnect";
-                    quality_bar.Enabled = false;
-                    
-                }
-                else
-                {
-                    connect_status.Text = "Disconnected";
-                    toggle_button.Text = "Connect";
-                    quality_bar.Enabled = true;
-                }
-
-                Application.DoEvents();
-            }
+            Environment.Exit(0);
         }
-
 
         private void Toggle_button_Click(object sender, EventArgs e)
         {
-            if (streamer.started)
-                streamer.Stop();
+            if (server.IsRunning)
+            {
+                server.Stop();
+            }
             else
             {
-                if (ip_box.Text != string.Empty)
-                    streamer.Start(ip_box.Text, quality_bar.Value);
-                else
-                    MessageBox.Show("Please enter the IP-Address of your switch!");
+                server.Start(2223, quality_bar.Value);
             }
+
+            UpdateUI();
         }
 
-        private void Window_FormClosed(object sender, FormClosedEventArgs e) => Environment.Exit(0);
+        private void Server_OnClientUpdate(object sender, EventArgs e)
+        {
+            UpdateUI();
+        }
+
+        private void Server_OnServerError(object sender, EventArgs e)
+        {
+            UpdateUI();
+        }
+
+        private void UpdateUI()
+        {
+            if (server.IsRunning)
+            {
+                connect_status.Text = (server.ClientCount > 0 ? "Streaming to client..." : "Waiting for connection...");
+                toggle_button.Text = "Stop";
+                quality_bar.Enabled = false;
+            }
+            else
+            {
+                connect_status.Text = "Server Stopped";
+                toggle_button.Text = "Start Server";
+                quality_bar.Enabled = true;
+            }
+        }
     }
 }

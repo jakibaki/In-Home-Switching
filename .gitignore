@@ -3,5 +3,6 @@
 *.pfs0
 *.nacp
 *.nso
+*.dll
 build/*
 .DS_Store
