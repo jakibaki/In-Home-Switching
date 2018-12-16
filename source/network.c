@@ -30,9 +30,9 @@ JoyConSocket* createJoyConSocket()
     return socket;
 }
 
-void freeJoyConSocket(JoyConSocket* socket)
+void freeJoyConSocket(JoyConSocket* connection)
 {
-    free(socket);
+    free(connection);
 }
 
 
@@ -78,4 +78,12 @@ int connectJoyConSocket(JoyConSocket* connection, int port)
         printf("Got gamepad-connection\n");
     }
     return 1;
+}
+
+void sendJoyConInput(JoyConSocket* connection, const JoyPkg* pkg)
+{
+    if (send(connection->sock, &pkg, sizeof(JoyPkg), 0) != sizeof(JoyPkg))
+    {
+        connection->sock = -1;
+    }
 }

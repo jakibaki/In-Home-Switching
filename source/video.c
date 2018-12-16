@@ -53,50 +53,70 @@ void freeVideoContext(VideoContext* context)
     free(context);
 }
 
-static int decode_packet(VideoContext* context, int *got_frame, int cached, AVPacket pkt)
+/* Decodes a single frame and returns 0 on success */
+int decode_frame(AVCodecContext *avctx, AVFrame *frame, int *got_frame, AVPacket *pkt)
 {
-    int ret = 0;
+    int ret;
     *got_frame = 0;
-    
-    int width = context->video_dec_ctx->width;
-    int height = context->video_dec_ctx->height;
-    enum AVPixelFormat pix_fmt = context->video_dec_ctx->pix_fmt;
 
-    if (pkt.stream_index == context->video_stream_idx)
-    {
-        //decode video frame
-
-        // deprecated --> use avcodec_send_packet() and avcodec_receive_frame() instead?
-        ret = avcodec_decode_video2(context->video_dec_ctx, context->frame, got_frame, &pkt);
+    if (pkt) {
+        ret = avcodec_send_packet(avctx, pkt);
         if (ret < 0)
-        {
-            fprintf(stderr, "Error decoding video frame (%s)\n", av_err2str(ret));
-            return ret;
-        }
-        if (*got_frame)
-        {
-            if (context->frame->width != width || context->frame->height != height ||
-                context->frame->format != pix_fmt)
-            {
-                fprintf(stderr, "Error: Width, height and pixel format have to be "
-                                "constant in a rawvideo file, but the width, height or "
-                                "pixel format of the input video changed:\n"
-                                "old: width = %d, height = %d, format = %s\n"
-                                "new: width = %d, height = %d, format = %s\n",
-                        width, height, av_get_pix_fmt_name(pix_fmt),
-                        context->frame->width, context->frame->height,
-                        av_get_pix_fmt_name(context->frame->format));
-                return -1;
-            }
-
-            if (++context->video_frame_count % 60 == 0)
-            {
-                printf("%d\n", context->video_frame_count);
-            }
-            drawFrame(context->renderContext, context);
-        }
+            return ret == AVERROR_EOF ? 0 : ret;
     }
-    return ret;
+
+    ret = avcodec_receive_frame(avctx, frame);
+    if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF)
+        return ret;
+    if (ret >= 0)
+        *got_frame = 1;
+
+    return 0;
+}
+
+/* Returns 1 if frame format is the same as the AVCodecContext format */
+int expected_frame_format(AVCodecContext *avctx, AVFrame* frame)
+{
+    int width = avctx->width;
+    int height = avctx->height;
+    enum AVPixelFormat pix_fmt = avctx->pix_fmt;
+
+    return frame->width == width || frame->height == height || frame->format == pix_fmt;
+}
+
+static int decode_packet(VideoContext* context, int *got_frame, AVPacket* pkt)
+{    
+    if (pkt->stream_index == context->video_stream_idx &&
+        decode_frame(context->video_dec_ctx, context->frame, got_frame, pkt) == 0)
+    {
+        if (!expected_frame_format(context->video_dec_ctx, context->frame))
+        {
+            fprintf(stderr, "Error: Width, height and pixel format have to be "
+                            "constant in a rawvideo file, but the width, height or "
+                            "pixel format of the input video changed:\n"
+                            "old: width = %d, height = %d, format = %s\n"
+                            "new: width = %d, height = %d, format = %s\n",
+                    context->video_dec_ctx->width,  
+                    context->video_dec_ctx->height, 
+                    av_get_pix_fmt_name(context->video_dec_ctx->pix_fmt),
+                    context->frame->width, context->frame->height,
+                    av_get_pix_fmt_name(context->frame->format));
+            return -1;
+        }
+
+        if (++context->video_frame_count % 60 == 0)
+        {
+            printf("%d\n", context->video_frame_count);
+        }
+        drawFrame(context->renderContext, context);
+    }
+    else 
+    {
+        fprintf(stderr, "Error decoding video frame \n");
+        return -1;
+    }
+
+    return context->frame->pkt_size;
 }
 
 static int open_codec_context(VideoContext* context, enum AVMediaType type)
@@ -105,7 +125,6 @@ static int open_codec_context(VideoContext* context, enum AVMediaType type)
     AVStream *st;
     AVCodec *dec = NULL;
 
-    printf("Hello form open codec\n");
     ret = av_find_best_stream(context->fmt_ctx, type, -1, -1, NULL, 0);
     if (ret < 0)
     {
@@ -232,7 +251,7 @@ int handleVid(VideoContext* context)
         AVPacket orig_pkt = pkt;
         do
         {
-            ret = decode_packet(context, &got_frame, 0, pkt);
+            ret = decode_packet(context, &got_frame, &pkt);
             if (ret < 0)
                 break;
             pkt.data += ret;
@@ -247,7 +266,7 @@ int handleVid(VideoContext* context)
     pkt.size = 0;
     do
     {
-        decode_packet(context, &got_frame, 1, pkt);
+        decode_packet(context, &got_frame, &pkt);
     } while (got_frame);
 
     printf("Demuxing succeeded.\n");

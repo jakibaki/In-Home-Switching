@@ -34,7 +34,7 @@ void drawFrame(RenderContext* context, VideoContext* videoContext)
     
     // We're scaling "into" the framebuffer for performance reasons.
     context->gfxBuffer = gfxGetFramebuffer(NULL, NULL);
-    sws_scale(context->ctx_sws, frame->data, frame->linesize, 0, frame->height, &(context->gfxBuffer), rgbframe->linesize);
+    sws_scale(context->ctx_sws, (const uint8_t * const *)frame->data, frame->linesize, 0, frame->height, &(context->gfxBuffer), rgbframe->linesize);
 
     //memcpy(fbuf, rgbframe->data[0], 1280 * 720 * 4);
 
