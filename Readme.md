@@ -87,3 +87,4 @@ This code is licensed GPLv3 and this has a reason: We do not want to see (or rea
 * [Captura](https://github.com/MathewSachin/Captura) for showing us how to capture frame input with Windows Duplication API
 * [simontime](https://github.com/switch-stuff/switch-usb-screen-stream-sharp) for his switch-usb-screen-stream-sharp project for Windows
 * [ScpDriverInterface](https://github.com/mogzol/ScpDriverInterface/) for the Xbox drivers on Windows
+* [Guillem96](https://github.com/Guillem96) for greatly improving our code quality
