@@ -8,12 +8,18 @@
 
 void flushSwapBuffers(void);
 
+static char *clock_strings[] = {
+    "333 MHz (underclocked, very slow)", "710 MHz (underclocked, slow)", "1020 MHz (standard, not overclocked)", "1224 MHz (slightly overclocked)", "1581 MHz (overclocked)", "1785 MHz (strong overclock)"};
+
+static int clock_rates[] = {
+    333000000, 710000000, 1020000000, 1224000000, 1581000000, 1785000000};
+
 RenderContext *createRenderer()
 {
     RenderContext *context = (RenderContext *)malloc(sizeof(RenderContext));
     context->ctx_sws = NULL;
 
-    context->window = SDL_CreateWindow("sdl2_gles2", 0, 0, 1920, 1080, SDL_WINDOW_FULLSCREEN);
+    context->window = SDL_CreateWindow("sdl2_gles2", 0, 0, RESX, RESY, SDL_WINDOW_FULLSCREEN);
     if (context->window == NULL)
     {
         SDL_Log("SDL_CreateWindow: %s\n", SDL_GetError());
@@ -54,7 +60,14 @@ RenderContext *createRenderer()
     context->font = FC_CreateFont();
     FC_LoadFont_RW(context->font, context->renderer, SDL_RWFromMem((void *)fontData.address, fontData.size), SDL_RWFromMem((void *)fontExtData.address, fontExtData.size), 1, 40, FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
 
+    context->overclock_status = 2;
+
     return context;
+}
+
+void applyOC(RenderContext *context)
+{
+    pcvSetClockRate(PcvModule_Cpu, clock_rates[context->overclock_status]);
 }
 
 void setFrameAvail(RenderContext *context)
@@ -118,8 +131,11 @@ void drawSplash(RenderContext *context)
     char str_buf[300];
     snprintf(str_buf, 300, "Your Switch is now ready for a PC to connect!\nIt has the IP-Address %u.%u.%u.%u\n"
                            "\nInstructions can be found here:"
-                           "\nhttps://bit.ly/2QrR1Lb",
-             ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF);
+                           "\nhttps://bit.ly/2QrR1Lb"
+                           "\n\nOverclock status:\n%s"
+                           "\nPress X to increase, Y to decrease clockrate",
+             ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF,
+             clock_strings[context->overclock_status]);
 
     SDL_Color black = {0, 0, 0, 255};
     SDL_Color white = {230, 230, 230, 255};
@@ -128,6 +144,22 @@ void drawSplash(RenderContext *context)
     SDL_DrawText(context, 170, 150, black, str_buf);
 
     SDL_RenderPresent(context->renderer);
+
+    hidScanInput();
+    u32 keys = hidKeysDown(CONTROLLER_P1_AUTO);
+    if(keys & KEY_X) {
+        if(context->overclock_status < sizeof(clock_rates)/sizeof(int)-1){
+            context->overclock_status++;
+            applyOC(context);
+        }
+    }
+
+    if(keys & KEY_Y) {
+        if(context->overclock_status > 0){
+            context->overclock_status--;
+            applyOC(context);
+        }
+    }
 }
 
 u64 old_time, new_time;

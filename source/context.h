@@ -36,6 +36,8 @@ typedef struct
     bool video_active;
     Mutex video_active_mut;
 
+    int overclock_status;
+
 } RenderContext;
 
 typedef struct

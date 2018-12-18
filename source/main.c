@@ -66,7 +66,7 @@ void switchInit()
 {
     plInitialize();
     pcvInitialize();
-    //pcvSetClockRate(PcvModule_Cpu, 1485000000);
+
     romfsInit();
     //gfxInitDefault();
     networkInit(&socketInitConf);
