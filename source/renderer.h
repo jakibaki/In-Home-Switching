@@ -3,8 +3,6 @@
 
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
-
-
 #include "context.h"
 
 /* Allocates a render context */
@@ -24,5 +22,8 @@ bool isVideoActive(RenderContext *context);
 
 /* Sets the video-playing status */
 void setVideoActive(RenderContext *context, bool active);
+
+/* Sets the switch overclock status */
+void applyOC(int *overclockIndex, int diff);
 
 #endif

@@ -84,7 +84,6 @@ int connectJoyConSocket(JoyConSocket* connection, int port)
             printf("Could not connect socket\n");
             return 0;
         }
-        //printf("Established gamepad-connection\n");
     }
     return 1;
 }
@@ -93,7 +92,6 @@ void sendJoyConInput(JoyConSocket* connection, const JoyPkg* pkg)
 {
     if (send(connection->sock, pkg, sizeof(JoyPkg), 0) != sizeof(JoyPkg))
     {
-        printf("Lost gamepad-connection\n");
         connection->sock = -1;
     }
 }

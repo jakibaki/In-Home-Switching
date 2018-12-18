@@ -8,15 +8,6 @@
 
 void flushSwapBuffers(void);
 
-static char *clock_strings[] = {
-    "333 MHz (underclocked, very slow)", 
-    "710 MHz (underclocked, slow)", 
-    "1020 MHz (standard, not overclocked)", 
-    "1224 MHz (slightly overclocked)", 
-    "1581 MHz (overclocked)", 
-    "1785 MHz (strong overclock)"
-    };
-
 static int clock_rates[] = {
     333000000, 
     710000000, 
@@ -110,9 +101,26 @@ void freeRenderer(RenderContext *context)
     free(context);
 }
 
-void applyOC(RenderContext *context)
+void applyOC(int *overclockIndex, int diff)
 {
-    pcvSetClockRate(PcvModule_Cpu, clock_rates[context->overclock_status]);
+    if (diff == 0)
+        return;
+    
+    int newIndex =  *overclockIndex + diff;
+    if (newIndex < 0)
+    {
+        newIndex = 0;
+    }
+    else if (newIndex > sizeof(clock_rates) / sizeof(int) - 1)
+    {
+        newIndex = sizeof(clock_rates) / sizeof(int) - 1;
+    }
+
+    if (newIndex != *overclockIndex)
+    {
+        *overclockIndex = newIndex;
+        pcvSetClockRate(PcvModule_Cpu, clock_rates[newIndex]);
+    }
 }
 
 bool isVideoActive(RenderContext *context)

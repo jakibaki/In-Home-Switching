@@ -45,6 +45,16 @@
 #include "video.h"
 #include "renderer.h"
 
+static char *clock_strings[] = {
+    "333 MHz (underclocked, very slow)", 
+    "710 MHz (underclocked, slow)", 
+    "1020 MHz (standard, not overclocked)", 
+    "1224 MHz (slightly overclocked)", 
+    "1581 MHz (overclocked)", 
+    "1785 MHz (strong overclock)"
+    };
+
+int overclockIndex = 2;
 RenderContext* renderContext = NULL;
 
 static const SocketInitConfig socketInitConf = {
@@ -219,6 +229,11 @@ static void ConnectToServer()
     renderContext = NULL;
 }
 
+static void ChangeOverClock(int diff)
+{
+    applyOC(&overclockIndex, diff);
+}
+
 int main(int argc, char **argv)
 {
 	Init_Services();
@@ -262,6 +277,24 @@ int main(int argc, char **argv)
         SDL_DrawRectR(connectRect, 30, 20, BUTTON_COLOR);
 	    SDL_DrawText(connectRect.x, connectRect.y, 30, BUTTON_TEXT_COLOR, "Connect");
 
+        // Overclock
+        SDL_DrawImage(icon_timer, 130, 200);
+        SDLRect overclockDownRect = { 90, 200, 36, 36 }; 
+        if (row == 2) // Draw selection highlight
+		    SDL_DrawRectR(overclockDownRect, 3, 3, SELECTION_COLOR);
+        SDL_DrawImage(icon_down, overclockDownRect.x, overclockDownRect.y);
+
+        SDLRect overclockUpRect = { 170, 200, 36, 36 }; 
+        if (row == 3) // Draw selection highlight
+		    SDL_DrawRectR(overclockUpRect, 3, 3, SELECTION_COLOR);
+        SDL_DrawImage(icon_up, overclockUpRect.x, overclockUpRect.y);
+
+        SDLRect overclockTextRect = { 0 };
+        SDL_GetTextDimensions(10, clock_strings[overclockIndex], &overclockTextRect.width, &overclockTextRect.height); 
+        overclockTextRect.x = (148 - overclockTextRect.width / 2); 
+        overclockTextRect.y = (260 - overclockTextRect.height / 2);
+	    SDL_DrawText(overclockTextRect.x, overclockTextRect.y, 10, TEXT_COLOR, clock_strings[overclockIndex]);
+
         // Process input
 		hidScanInput();
 		Touch_Process(&touchInfo);
@@ -272,8 +305,8 @@ int main(int argc, char **argv)
         else if ((kDown & KEY_DUP) || (kDown & KEY_LSTICK_UP) || (kDown & KEY_RSTICK_UP))
             row--;
 
-        Utils_SetMax(&row, 0, 1);
-		Utils_SetMin(&row, 1, 0);
+        Utils_SetMax(&row, 0, 3);
+		Utils_SetMin(&row, 3, 0);
 
         if (kDown & KEY_A) 
         {
@@ -289,6 +322,10 @@ int main(int argc, char **argv)
                 row = 0;
             else if (tapped_inside(touchInfo, connectRect.x, connectRect.y, connectRect.x + connectRect.width, connectRect.y + connectRect.height))
                 row = 1;
+            else if (tapped_inside(touchInfo, overclockDownRect.x, overclockDownRect.y, overclockDownRect.x + overclockDownRect.width, overclockDownRect.y + overclockDownRect.height))
+                row = 2;
+            else if (tapped_inside(touchInfo, overclockUpRect.x, overclockUpRect.y, overclockUpRect.x + overclockUpRect.width, overclockUpRect.y + overclockUpRect.height))
+                row = 3;
         }
         else if (touchInfo.state == TouchEnded && touchInfo.tapType != TapNone) 
         {
@@ -296,6 +333,10 @@ int main(int argc, char **argv)
                 EnterServerAddress();
             else if (tapped_inside(touchInfo, connectRect.x, connectRect.y, connectRect.x + connectRect.width, connectRect.y + connectRect.height))
                 ConnectToServer();
+            else if (tapped_inside(touchInfo, overclockDownRect.x, overclockDownRect.y, overclockDownRect.x + overclockDownRect.width, overclockDownRect.y + overclockDownRect.height))
+                ChangeOverClock(-1);
+            else if (tapped_inside(touchInfo, overclockUpRect.x, overclockUpRect.y, overclockUpRect.x + overclockUpRect.width, overclockUpRect.y + overclockUpRect.height))
+                ChangeOverClock(1);
         }
 
 		SDL_RenderDisplay();
@@ -305,4 +346,5 @@ int main(int argc, char **argv)
 	}
 
 	Term_Services();
+    return 0;
 }

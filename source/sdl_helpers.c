@@ -22,7 +22,7 @@ SDL_Window *SDL_GetMainWindow(void) {
 }
 
 static FC_Font *GetFont(int size) {
-	if (size == 20)
+	if (size == 10)
 		return Roboto_small;
 	else if (size == 25)
 		return Roboto;
@@ -60,7 +60,7 @@ Result SDL_HelperInit(void) {
 	FC_LoadFont_RW(Roboto_large, RENDERER, SDL_RWFromMem((void*)fontData.address, fontData.size), SDL_RWFromMem((void*)fontExtData.address, fontExtData.size), 1, 30, FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
 
 	Roboto_small = FC_CreateFont();
-	FC_LoadFont_RW(Roboto_small, RENDERER, SDL_RWFromMem((void*)fontData.address, fontData.size), SDL_RWFromMem((void*)fontExtData.address, fontExtData.size), 1, 20, FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
+	FC_LoadFont_RW(Roboto_small, RENDERER, SDL_RWFromMem((void*)fontData.address, fontData.size), SDL_RWFromMem((void*)fontExtData.address, fontExtData.size), 1, 10, FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
 
 	Roboto_OSK = FC_CreateFont();
 	FC_LoadFont_RW(Roboto_OSK, RENDERER, SDL_RWFromMem((void*)fontData.address, fontData.size), SDL_RWFromMem((void*)fontExtData.address, fontExtData.size), 1, 50, FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
