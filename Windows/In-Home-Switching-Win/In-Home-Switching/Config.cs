@@ -40,7 +40,7 @@ namespace Configsys
                         try
                         {
                             parts[1] = parts[1].TrimStart(' ');
-                            switch (parts[0].TrimEnd(' ').ToLower())
+                            switch (parts[0].TrimEnd(' '))
                             {
                                 case "IP":
                                     IP = parts[1];
