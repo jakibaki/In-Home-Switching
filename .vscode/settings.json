@@ -5,6 +5,8 @@
       "renderer.h": "c",
       "network.h": "c",
       "input.h": "c",
-      "context.h": "c"
+      "context.h": "c",
+      "sdl.h": "c",
+      "sdl2_gfxprimitives.h": "c"
     }
 }

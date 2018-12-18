@@ -75,7 +75,6 @@ int connectJoyConSocket(JoyConSocket* connection, int port)
             connection->lissock = -1;
             return 0;
         }
-        printf("Got gamepad-connection\n");
     }
     return 1;
 }
