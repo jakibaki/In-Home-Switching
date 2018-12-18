@@ -27,9 +27,7 @@ RenderContext *createRenderer()
         while (1)
             ;
     }
-
-    const SDL_DisplayMode mode;
-    SDL_GetDisplayMode(0, 1, &mode);
+    
     //SDL_SetWindowDisplayMode(context->window, &mode);
 
     context->renderer = SDL_CreateRenderer(context->window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -147,15 +145,19 @@ void drawSplash(RenderContext *context)
 
     hidScanInput();
     u32 keys = hidKeysDown(CONTROLLER_P1_AUTO);
-    if(keys & KEY_X) {
-        if(context->overclock_status < sizeof(clock_rates)/sizeof(int)-1){
+    if (keys & KEY_X)
+    {
+        if (context->overclock_status < sizeof(clock_rates) / sizeof(int) - 1)
+        {
             context->overclock_status++;
             applyOC(context);
         }
     }
 
-    if(keys & KEY_Y) {
-        if(context->overclock_status > 0){
+    if (keys & KEY_Y)
+    {
+        if (context->overclock_status > 0)
+        {
             context->overclock_status--;
             applyOC(context);
         }
@@ -163,20 +165,9 @@ void drawSplash(RenderContext *context)
 }
 
 u64 old_time, new_time;
-void drawFrame(RenderContext *renderContext, VideoContext *videoContext)
+void handleFrame(RenderContext *renderContext, VideoContext *videoContext)
 {
     AVFrame *frame = videoContext->frame;
-    //AVFrame *rgbframe = videoContext->rgbframe;
-    enum AVPixelFormat pix_fmt = videoContext->video_dec_ctx->pix_fmt;
-
-    //if (context->ctx_sws == NULL)
-    //    context->ctx_sws = sws_getContext(frame->width, frame->height, pix_fmt, frame->width, frame->height, AV_PIX_FMT_RGBA, SWS_BILINEAR, 0, 0, 0);
-
-    // We're scaling "into" the framebuffer for performance reasons.
-    //context->gfxBuffer = gfxGetFramebuffer(NULL, NULL);
-    //sws_scale(context->ctx_sws, (const uint8_t *const *)frame->data, frame->linesize, 0, frame->height, &(context->gfxBuffer), rgbframe->linesize);
-
-    //    SDL_UpdateTexture( renderContext->renderer, NULL, renderContext->buffer, RESX);
 
     mutexLock(&renderContext->texture_mut);
     memcpy(renderContext->YPlane, frame->data[0], sizeof(renderContext->YPlane));
@@ -191,10 +182,24 @@ void drawFrame(RenderContext *renderContext, VideoContext *videoContext)
         printf("Framerate: %f\n", 60.0 / ((new_time - old_time) / 19200000.0));
         old_time = new_time;
     }
+}
 
-    //memcpy(fbuf, rgbframe->data[0], RESX * RESY * 4);
+void displayFrame(RenderContext *renderContext)
+{
+    while (!checkFrameAvail(renderContext))
+    {
+    }
 
-    //flushSwapBuffers();
+    SDL_RenderClear(renderContext->renderer);
+
+    mutexLock(&renderContext->texture_mut);
+    SDL_UpdateYUVTexture(renderContext->yuv_text, &renderContext->rect, renderContext->YPlane, RESX,
+                         renderContext->UPlane, RESX / 2,
+                         renderContext->VPlane, RESX / 2);
+    mutexUnlock(&renderContext->texture_mut);
+
+    SDL_RenderCopy(renderContext->renderer, renderContext->yuv_text, NULL, NULL);
+    SDL_RenderPresent(renderContext->renderer);
 }
 
 void flushSwapBuffers()

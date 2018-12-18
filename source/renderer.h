@@ -13,8 +13,11 @@ RenderContext* createRenderer(void);
 /* Draws an image filling all screen */
 void drawSplash(RenderContext *context);
 
-/* Renders a frame recieved from server */
-void drawFrame(RenderContext* context, VideoContext* videoContext);
+/* Handles a frame received from server */
+void handleFrame(RenderContext* context, VideoContext* videoContext);
+
+/* Draws a frame */
+void displayFrame(RenderContext *renderContext);
 
 /* Deallocates the render context */
 void freeRenderer(RenderContext* context);

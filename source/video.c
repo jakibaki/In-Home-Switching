@@ -105,7 +105,7 @@ static int decode_packet(VideoContext *context, int *got_frame, AVPacket *pkt)
             return -1;
         }
 
-        drawFrame(context->renderContext, context);
+        handleFrame(context->renderContext, context);
     }
     else
     {

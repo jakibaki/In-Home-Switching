@@ -110,33 +110,11 @@ int main(int argc, char **argv)
 
     startRender(videoContext);
 
-    /* Main thread should not be runing the main loop */
-    /* It should wait all its workers with thread join */
-
-    /*while (appletMainLoop())
-    {
-        //drawSplash(renderContext, "romfs:/splash.rgba");
-        handleVid(videoContext);
-    }*/
-
     while (appletMainLoop())
     {
         if (isVideoActive(renderContext))
         {
-            while (!checkFrameAvail(renderContext))
-            {
-            }
-
-            SDL_RenderClear(renderContext->renderer);
-
-            mutexLock(&renderContext->texture_mut);
-            SDL_UpdateYUVTexture(renderContext->yuv_text, &renderContext->rect, renderContext->YPlane, RESX,
-                                 renderContext->UPlane, RESX / 2,
-                                 renderContext->VPlane, RESX / 2);
-            mutexUnlock(&renderContext->texture_mut);
-
-            SDL_RenderCopy(renderContext->renderer, renderContext->yuv_text, NULL, NULL);
-            SDL_RenderPresent(renderContext->renderer);
+            displayFrame(renderContext);
         } else {
             drawSplash(renderContext);
         }
@@ -144,6 +122,6 @@ int main(int argc, char **argv)
 
     /* Deinitialize all used systems */
     freeRenderer(renderContext);
-    // freeVideoContext(videoContext);
+    freeVideoContext(videoContext);
     switchDestroy();
 }
