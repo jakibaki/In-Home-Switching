@@ -260,6 +260,8 @@ int handleVid(VideoContext* context)
         while (pkt.size > 0);
         av_packet_unref(&orig_pkt);
     }
+    
+    printf("flushing cached frames\n");
 
     //flush cached frames
     pkt.data = NULL;

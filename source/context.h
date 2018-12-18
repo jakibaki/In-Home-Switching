@@ -6,9 +6,7 @@
 #include <SDL2/SDL.h>
 
 typedef struct {
-    struct SwsContext* ctx_sws;
     SDL_Texture* texture;
-    uint8_t* data;
 } RenderContext;
 
 

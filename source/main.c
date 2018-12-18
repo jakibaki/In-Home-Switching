@@ -74,6 +74,8 @@ static void Term_Services(void)
         renderContext = NULL;
     }
 
+    is_running = false;
+
 	Images_Free();
 	networkDestroy();
 
@@ -148,10 +150,18 @@ static void ConnectToServer()
     while (appletMainLoop())
     {
         handleVid(videoContext);
+
+        // Process input
+		hidScanInput();
+		u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
+        if (kDown & KEY_PLUS)
+			break;
     }
     
     freeRenderer(renderContext);
     renderContext = NULL;
+
+    is_running = false;
 }
 
 int main(int argc, char **argv)

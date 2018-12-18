@@ -31,8 +31,10 @@ void handleInput(JoyConSocket* connection)
 
 void inputHandlerLoop(void* dummy)
 {
+    is_running = true;
+    
     JoyConSocket* connection = createJoyConSocket();
-    while(appletMainLoop())
+    while(appletMainLoop() && is_running)
     {
         handleInput(connection);
         svcSleepThread(23333333);

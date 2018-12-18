@@ -11,74 +11,50 @@ void flushSwapBuffers(void);
 RenderContext* createRenderer()
 {
     RenderContext* context = (RenderContext*)malloc(sizeof(RenderContext));
-    context->ctx_sws = NULL;
     context->texture = NULL;
-    context->data = NULL;
     return context;
 }
 
 void drawFrame(RenderContext* context, VideoContext* videoContext) 
 {
     AVFrame* frame = videoContext->frame;
-    AVFrame* rgbframe = videoContext->rgbframe;
 
-    if (context->ctx_sws == NULL)
+    if (context->texture == NULL)
     {
-        // Allocate a place to put our YUV image on that screen
+        // Allocate a texture onto which we can render the video frame
         context->texture = SDL_CreateTexture(
             SDL_GetMainRenderer(),
-            SDL_PIXELFORMAT_RGBA32,
-            SDL_TEXTUREACCESS_STREAMING,
+            SDL_PIXELFORMAT_YV12,
+            SDL_TEXTUREACCESS_STATIC,
             frame->width,
             frame->height
         );
-
-        // Initialize SWS context for software scaling
-        enum AVPixelFormat pix_fmt = videoContext->video_dec_ctx->pix_fmt;
-        context->ctx_sws = sws_getContext(
-            frame->width,
-            frame->height,
-            pix_fmt,
-            frame->width,
-            frame->height,
-            AV_PIX_FMT_RGBA,
-            SWS_BILINEAR,
-            NULL,
-            NULL,
-            NULL);
-
-        // Create the pixel buffer
-        context->data = (uint8_t*)malloc(frame->width * frame->height * 4);
     }
 
-    int pitch;
-    SDL_LockTexture(context->texture, NULL, (void**)&context->data, &pitch);
-
-	// Convert the image into format that SDL uses
-	sws_scale( 
-        context->ctx_sws, 
-        (uint8_t const * const *)frame->data,
-        frame->linesize, 
-        0, 
-        frame->height,
-        (uint8_t* const*)&context->data, 
-        rgbframe->linesize);
-
-    SDL_UnlockTexture(context->texture);
+    // Copy the frame onto the texture
+    SDL_UpdateYUVTexture(
+        context->texture, 
+        NULL,
+        frame->data[0],
+        frame->linesize[0],
+        frame->data[1],
+        frame->linesize[1],
+        frame->data[2],
+        frame->linesize[2]
+    );
 
     // Display the texture on the screen
-    SDL_Renderer* renderer = SDL_GetMainRenderer();
-    SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, context->texture, NULL, NULL);
-    SDL_RenderPresent(renderer);
+    SDL_RenderCopy(SDL_GetMainRenderer(), context->texture, NULL, NULL);
+    SDL_RenderDisplay();
 }
 
-void flushSwapBuffers() 
+void freeRenderer(RenderContext* context) 
 {
-    gfxFlushBuffers();
-    gfxSwapBuffers();
-}
+    if (context->texture != NULL)
+    {
+        SDL_DestroyTexture(context->texture);
+        context->texture = NULL;
+    }
 
-void freeRenderer(RenderContext* context) {
     free(context);
 }
