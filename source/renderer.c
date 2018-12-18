@@ -17,7 +17,6 @@ static int clock_rates[] = {
 RenderContext *createRenderer()
 {
     RenderContext *context = (RenderContext *)malloc(sizeof(RenderContext));
-    context->ctx_sws = NULL;
 
     context->window = SDL_CreateWindow("sdl2_gles2", 0, 0, RESX, RESY, SDL_WINDOW_FULLSCREEN);
     if (context->window == NULL)

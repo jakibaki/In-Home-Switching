@@ -13,9 +13,6 @@
 
 typedef struct
 {
-    struct SwsContext *ctx_sws;
-    u8 *gfxBuffer;
-
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_Texture *yuv_text;
