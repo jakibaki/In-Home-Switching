@@ -114,3 +114,6 @@ This code is licensed GPLv3 and this has a reason: We do not want to see (or rea
 * [simontime](https://github.com/switch-stuff/switch-usb-screen-stream-sharp) for his switch-usb-screen-stream-sharp project for Windows
 * [ScpDriverInterface](https://github.com/mogzol/ScpDriverInterface/) for the Xbox drivers on Windows
 * [Guillem96](https://github.com/Guillem96) for greatly improving our code quality
+* [NX-Shell](https://github.com/joel16/NX-Shell) for teaching us how to use SDL
+* [Checkpoint](https://github.com/FlagBrew/Checkpoint) also for SDL examples
+* [SunTheCourier](https://github.com/SunTheCourier) for adding config support to our Windows client

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -77,7 +78,7 @@ namespace InHomeSwitching
                 new Task(Stop).Start();
 
                 // Todo: Do something with the actual exception (display message to user?)
-                OnServerError(this, new EventArgs());
+                RaiseEventOnUIThread(OnServerError, this, new EventArgs());
             }
         }
 
@@ -92,11 +93,18 @@ namespace InHomeSwitching
                 {
                     TcpClient client = listener.AcceptTcpClient();
                     Streamer switchStreamer = new Streamer(client, Quality);
+
+                    if (streamers.ContainsKey(switchStreamer.IPAddress))
+                    {
+                        streamers[switchStreamer.IPAddress].Stop();
+                        streamers[switchStreamer.IPAddress].OnStreamerError -= SwitchStreamer_OnStreamerError;
+                    }
+
                     switchStreamer.OnStreamerError += SwitchStreamer_OnStreamerError;
                     streamers[switchStreamer.IPAddress] = switchStreamer;
                     switchStreamer.Start();
 
-                    OnClientUpdate(this, new EventArgs());
+                    RaiseEventOnUIThread(OnClientUpdate, this, new EventArgs());
                 }
             }
             catch (Exception e)
@@ -110,9 +118,32 @@ namespace InHomeSwitching
         private void SwitchStreamer_OnStreamerError(object sender, EventArgs e)
         {
             Streamer streamer;
-            streamers.TryRemove(((Streamer)sender).IPAddress, out streamer);
+            if (streamers.TryRemove(((Streamer)sender).IPAddress, out streamer))
+            {
+                streamer.OnStreamerError -= SwitchStreamer_OnStreamerError;
+            }
 
-            OnClientUpdate(this, new EventArgs());
+            RaiseEventOnUIThread(OnClientUpdate, this, new EventArgs());
+        }
+
+        private void RaiseEventOnUIThread(MulticastDelegate theEvent, params object[] args)
+        {
+            MulticastDelegate threadSafeMulticastDelegate = theEvent;
+            if (threadSafeMulticastDelegate != null)
+            {
+                foreach (Delegate d in threadSafeMulticastDelegate.GetInvocationList())
+                {
+                    var synchronizeInvoke = d.Target as ISynchronizeInvoke;
+                    if ((synchronizeInvoke != null) && synchronizeInvoke.InvokeRequired)
+                    {
+                        synchronizeInvoke.EndInvoke(synchronizeInvoke.BeginInvoke(d, args));
+                    }
+                    else
+                    {
+                        d.DynamicInvoke(args);
+                    }
+                }
+            }
         }
     }
 }

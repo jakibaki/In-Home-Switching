@@ -84,7 +84,7 @@ int connectJoyConSocket(JoyConSocket* connection, int port)
             printf("Could not connect socket\n");
             return 0;
         }
-        printf("Established gamepad-connection\n");
+        //printf("Established gamepad-connection\n");
     }
     return 1;
 }

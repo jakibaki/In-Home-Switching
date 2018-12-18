@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Configsys;
+using System;
 using System.Windows.Forms;
 
 namespace InHomeSwitching
@@ -19,10 +20,13 @@ namespace InHomeSwitching
             server.OnClientUpdate += Server_OnClientUpdate;
             server.OnServerError += Server_OnServerError;
             UpdateUI();
+
+            LoadConfig();
         }
 
         private void Window_FormClosed(object sender, FormClosedEventArgs e)
         {
+            SaveConfig();
             Environment.Exit(0);
         }
 
@@ -64,6 +68,21 @@ namespace InHomeSwitching
                 toggle_button.Text = "Start Server";
                 quality_bar.Enabled = true;
             }
+        }
+
+        private void LoadConfig()
+        {
+            Config config = new Config();
+            quality_bar.Value = config.Quality;
+        }
+
+        private void SaveConfig()
+        {
+            Config config = new Config()
+            {
+                Quality = quality_bar.Value
+            };
+            config.Save();
         }
     }
 }

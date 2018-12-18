@@ -50,9 +50,7 @@ namespace InHomeSwitching
 
         // Members
         private const string FFMPEGArgs = "-y -f rawvideo -pixel_format rgb32 -framerate 300 -video_size {0}x{1} -i pipe: -f h264 -vf scale=1280x720 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -profile:v baseline -x264-params \"nal-hrd=cbr\" -b:v {2}M -minrate {2}M -maxrate {2}M -bufsize 2M tcp://{3}:2222 ";
-        private static DesktopDuplicator desktopDuplicator = new DesktopDuplicator(0);
-
-        private bool started;
+        private static DesktopDuplicator desktopDuplicator;
 
         private int resX;
         private int resY;
@@ -71,7 +69,7 @@ namespace InHomeSwitching
         public Streamer(TcpClient switchClient, int streamQuality)
         {
             client = switchClient;
-            streamQuality = quality;
+            quality = streamQuality;
             IPAddress = ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString();
 
             scp = new ScpBus();
@@ -86,21 +84,16 @@ namespace InHomeSwitching
             }
 
             IsRunning = true;
-            StartFFMPEGStreaming();
 
-            // Check the server wasn't stopped while waiting for ffmepg to start
-            if (IsRunning)
-            {
-                var inputRef = new ThreadStart(InputLoop);
-                inputThread = new Thread(inputRef);
-                inputThread.Name = "Input";
-                inputThread.Start();
+            var inputRef = new ThreadStart(InputLoop);
+            inputThread = new Thread(inputRef);
+            inputThread.Name = "Input";
+            inputThread.Start();
 
-                var renderRef = new ThreadStart(RenderLoop);
-                renderThread = new Thread(renderRef);
-                renderThread.Name = "Render";
-                renderThread.Start();
-            }
+            var renderRef = new ThreadStart(RenderLoop);
+            renderThread = new Thread(renderRef);
+            renderThread.Name = "Render";
+            renderThread.Start();
         }
 
         public void Stop()
@@ -124,6 +117,9 @@ namespace InHomeSwitching
                 renderThread.Join();
                 renderThread = null;
             }
+
+            resX = 0;
+            resY = 0;
         }
 
         private void StopDueToError(Exception e)

@@ -50,10 +50,10 @@ RenderContext* renderContext = NULL;
 static const SocketInitConfig socketInitConf = {
     .bsdsockets_version = 1,
 
-    .tcp_tx_buf_size = 0x8000,
-    .tcp_rx_buf_size = 0x10000,
-    .tcp_tx_buf_max_size = 0x40000,
-    .tcp_rx_buf_max_size = 0x40000,
+    .tcp_tx_buf_size = 0x80000,
+    .tcp_rx_buf_size = 0x100000,
+    .tcp_tx_buf_max_size = 0x400000,
+    .tcp_rx_buf_max_size = 0x400000,
 
     .udp_tx_buf_size = 0xA2400,
     .udp_rx_buf_size = 0xAA500,
@@ -96,9 +96,6 @@ static Result Init_Services(void)
     if (R_FAILED(ret = pcvInitialize()))
         return ret;
 
-    if (R_FAILED(ret = pcvSetClockRate(PcvModule_Cpu, 1785000000)))
-        return ret;
-
     if (R_FAILED(ret = plInitialize()))
         return ret;
 
@@ -119,6 +116,28 @@ static Result Init_Services(void)
 	return 0;
 }
 
+void startInput()
+{
+    static Thread inputHandlerThread;
+    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 1);
+    threadStart(&inputHandlerThread);
+}
+
+void startRender(VideoContext *videoContext)
+{
+    static Thread renderThread;
+    threadCreate(&renderThread, videoLoop, videoContext, 0x1000000, 0x2b, 2);
+    threadStart(&renderThread);
+}
+
+static void DrawTitle()
+{
+    SDL_ClearScreen(BACKGROUND_COLOR);
+    SDL_DrawRect(0, 60, 1280, 100, TITLE_BAR_COLOR);	// Title bar
+    SDL_DrawImage(icon_app, 20, -18);  // Icon
+    SDL_DrawText(400, 85, 50, TITLE_TEXT_COLOR, "In-Home-Switching"); // Title
+}
+
 static void EnterServerAddress()
 {
     OSK_Display("Enter Server Address", server_address);
@@ -137,31 +156,67 @@ static void ConnectToServer()
     if (!isValidAddress(server_address))
         return;
 
-    printf("Connecting to server...\n");
-
-    static Thread inputHandlerThread;
-    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 0);
-    threadStart(&inputHandlerThread);
 
     renderContext = createRenderer();
     VideoContext* videoContext = createVideoContext();
     videoContext->renderContext = renderContext;
+    
+    startInput();
+    startRender(videoContext);
+
+    bool foundConnection = false;
 
     while (appletMainLoop())
     {
-        handleVid(videoContext);
+        if (isVideoActive(renderContext))
+        {
+            // Connected...
+            if (!foundConnection)
+            {
+                printf("Connected to server\n");
+                foundConnection = true;
+            }
+            displayFrame(renderContext);
+        }
+        else if (!foundConnection)
+        {
+            // Connecting...
+            printf("Connecting to server...\n");
+            DrawTitle();
 
-        // Process input
-		hidScanInput();
-		u64 kDown = hidKeysDown(CONTROLLER_P1_AUTO);
-        if (kDown & KEY_PLUS)
-			break;
+            // Connecting text
+            u32 con_width = 0, con_height = 0;
+            SDL_GetTextDimensions(30, "Connecting...", &con_width, &con_height);
+            SDL_DrawText(620 - con_width / 2, 
+                        360 - con_height / 2, 
+                        30, TEXT_COLOR, "Connecting...");
+
+            SDL_RenderDisplay();
+        }
+        else
+        {
+            // Lost connection...
+            printf("Lost connection to server...\n");
+
+            // Reconnecting message
+            SDLRect connectRect = { 0 };
+            SDL_GetTextDimensions(30, "Reconnecting...", &connectRect.width, &connectRect.height); 
+            connectRect.x = (640 - connectRect.width / 2); 
+            connectRect.y = (360 - connectRect.height / 2);
+            SDL_DrawRectR(connectRect, 30, 20, TITLE_BAR_COLOR);
+            SDL_DrawText(connectRect.x, connectRect.y, 30, TEXT_COLOR, "Reconnecting...");
+
+            SDL_RenderDisplay();
+
+            // Todo: Quit all theads, clean up, and go back to main screen after some timeout
+        }
     }
-    
-    freeRenderer(renderContext);
-    renderContext = NULL;
 
     is_running = false;
+    
+    freeVideoContext(videoContext);
+    freeRenderer(renderContext);
+    renderContext = NULL;
 }
 
 int main(int argc, char **argv)
@@ -184,10 +239,7 @@ int main(int argc, char **argv)
 
     while(appletMainLoop()) 
     {
-		SDL_ClearScreen(BACKGROUND_COLOR);
-		SDL_DrawRect(0, 60, 1280, 100, TITLE_BAR_COLOR);	// Title bar
-		SDL_DrawImage(icon_app, 20, -18);  // Icon
-		SDL_DrawText(400, 85, 50, TITLE_TEXT_COLOR, "In-Home-Switching"); // Title
+		DrawTitle();
 
         // Server address textbox
         SDLRect serverAddressRect = { 640 - 250, 350, 500, 80 };        

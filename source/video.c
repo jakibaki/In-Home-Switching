@@ -8,9 +8,9 @@
 #include "network.h"
 #include "renderer.h"
 
-VideoContext* createVideoContext()
+VideoContext *createVideoContext()
 {
-    VideoContext* context = (VideoContext*)malloc(sizeof(VideoContext));
+    VideoContext *context = (VideoContext *)malloc(sizeof(VideoContext));
     context->fmt_ctx = NULL;
     context->video_dec_ctx = NULL;
     context->video_stream = NULL;
@@ -18,9 +18,9 @@ VideoContext* createVideoContext()
     context->rgbframe = NULL;
     context->video_frame_count = 0;
 
-    for(size_t i = 0; i < 4; i++)
+    for (size_t i = 0; i < 4; i++)
         context->video_dst_data[i] = NULL;
-    
+
     // Frame
     context->frame = av_frame_alloc();
     if (context->frame == NULL)
@@ -31,19 +31,19 @@ VideoContext* createVideoContext()
 
     // RGBA Frame
     context->rgbframe = av_frame_alloc();
-    context->rgbframe->width = 1280;
-    context->rgbframe->height = 720;
+    context->rgbframe->width = RESX;
+    context->rgbframe->height = RESY;
     context->rgbframe->format = AV_PIX_FMT_RGBA;
-    av_image_alloc(context->rgbframe->data, 
-                    context->rgbframe->linesize, 
-                    context->rgbframe->width, 
-                    context->rgbframe->height, 
-                    context->rgbframe->format, 32);
+    av_image_alloc(context->rgbframe->data,
+                   context->rgbframe->linesize,
+                   context->rgbframe->width,
+                   context->rgbframe->height,
+                   context->rgbframe->format, 32);
 
     return context;
 }
 
-void freeVideoContext(VideoContext* context)
+void freeVideoContext(VideoContext *context)
 {
     avcodec_free_context(&(context->video_dec_ctx));
     //avcodec_free_context(&audio_dec_ctx);
@@ -59,7 +59,8 @@ int decode_frame(AVCodecContext *avctx, AVFrame *frame, int *got_frame, AVPacket
     int ret;
     *got_frame = 0;
 
-    if (pkt) {
+    if (pkt)
+    {
         ret = avcodec_send_packet(avctx, pkt);
         if (ret < 0)
             return ret == AVERROR_EOF ? 0 : ret;
@@ -75,7 +76,7 @@ int decode_frame(AVCodecContext *avctx, AVFrame *frame, int *got_frame, AVPacket
 }
 
 /* Returns 1 if frame format is the same as the AVCodecContext format */
-int expected_frame_format(AVCodecContext *avctx, AVFrame* frame)
+int expected_frame_format(AVCodecContext *avctx, AVFrame *frame)
 {
     int width = avctx->width;
     int height = avctx->height;
@@ -84,8 +85,8 @@ int expected_frame_format(AVCodecContext *avctx, AVFrame* frame)
     return frame->width == width || frame->height == height || frame->format == pix_fmt;
 }
 
-static int decode_packet(VideoContext* context, int *got_frame, AVPacket* pkt)
-{    
+static int decode_packet(VideoContext *context, int *got_frame, AVPacket *pkt)
+{
     if (pkt->stream_index == context->video_stream_idx &&
         decode_frame(context->video_dec_ctx, context->frame, got_frame, pkt) == 0)
     {
@@ -96,21 +97,17 @@ static int decode_packet(VideoContext* context, int *got_frame, AVPacket* pkt)
                             "pixel format of the input video changed:\n"
                             "old: width = %d, height = %d, format = %s\n"
                             "new: width = %d, height = %d, format = %s\n",
-                    context->video_dec_ctx->width,  
-                    context->video_dec_ctx->height, 
+                    context->video_dec_ctx->width,
+                    context->video_dec_ctx->height,
                     av_get_pix_fmt_name(context->video_dec_ctx->pix_fmt),
                     context->frame->width, context->frame->height,
                     av_get_pix_fmt_name(context->frame->format));
             return -1;
         }
 
-        if (++context->video_frame_count % 60 == 0)
-        {
-            printf("%d\n", context->video_frame_count);
-        }
-        drawFrame(context->renderContext, context);
+        handleFrame(context->renderContext, context);
     }
-    else 
+    else
     {
         fprintf(stderr, "Error decoding video frame \n");
         return -1;
@@ -119,7 +116,7 @@ static int decode_packet(VideoContext* context, int *got_frame, AVPacket* pkt)
     return context->frame->pkt_size;
 }
 
-static int open_codec_context(VideoContext* context, enum AVMediaType type)
+static int open_codec_context(VideoContext *context, enum AVMediaType type)
 {
     int ret, stream_index;
     AVStream *st;
@@ -176,7 +173,14 @@ static int open_codec_context(VideoContext* context, enum AVMediaType type)
     return 0;
 }
 
-int handleVid(VideoContext* context)
+void videoLoop(void *context_ptr)
+{
+    VideoContext* context = (VideoContext*) context_ptr;
+    while(appletMainLoop())
+        handleVid(context);
+}
+
+int handleVid(VideoContext *context)
 {
     int ret = 0;
     int got_frame = 0;
@@ -200,6 +204,7 @@ int handleVid(VideoContext* context)
         return ret;
     }
 
+    setVideoActive(context->renderContext, true);
     context->fmt_ctx = fmt_ctx;
 
     // Retrieve stream information
@@ -215,11 +220,11 @@ int handleVid(VideoContext* context)
         context->video_stream = fmt_ctx->streams[context->video_stream_idx];
 
         // Allocate image where the decoded image will be put
-        ret = av_image_alloc(context->video_dst_data, 
-                                context->video_dst_linesize,
-                                context->video_dec_ctx->width, 
-                                context->video_dec_ctx->height, 
-                                context->video_dec_ctx->pix_fmt, 1);
+        ret = av_image_alloc(context->video_dst_data,
+                             context->video_dst_linesize,
+                             context->video_dec_ctx->width,
+                             context->video_dec_ctx->height,
+                             context->video_dec_ctx->pix_fmt, 1);
         if (ret < 0)
         {
             char errbuf[100];
@@ -256,8 +261,7 @@ int handleVid(VideoContext* context)
                 break;
             pkt.data += ret;
             pkt.size -= ret;
-        } 
-        while (pkt.size > 0);
+        } while (pkt.size > 0);
         av_packet_unref(&orig_pkt);
     }
     
@@ -271,7 +275,8 @@ int handleVid(VideoContext* context)
         decode_packet(context, &got_frame, &pkt);
     } while (got_frame);
 
-    printf("Demuxing succeeded.\n");
+    printf("Stream finished.\n");
+    setVideoActive(context->renderContext, false);
 
     return ret;
 }
