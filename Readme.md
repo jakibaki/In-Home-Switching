@@ -1,5 +1,7 @@
 # In-Home-Switching
-
+<p align="center"> 
+<img src="icon.jpg" alt="In-Home-Switching on Switch">
+</p>
 This is a homebrew that enables streaming of PC games to the Nintendo Switch.
 
 Have you ever been told by your parents that spending hours sitting in front of a PC was bad for you (like I was)? Well, now you can play your games portably anywhere in your house!
@@ -18,14 +20,24 @@ This project is fairly new, so please do not consider it totally stable. If you 
 ## How to Use
 If you do not want to build by yourself, have a look at the [releases page](https://github.com/jakibaki/In-Home-Switching/releases). There you can find an Archive with the App for the Switch as well as the corresponding PC companion app. For the PC App, just execute In-Home-Switching.exe in the Windows directory after unzipping. 
 
-On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) must also be installed (just unzip and execute `Driver Installer/ScpDriverInstaller.exe`). Otherwise the program will crash silently.
+The latest release uses a desktop app as a server that can be left running waiting for a connection from your switch. This means you only need to start it once, and then you'll be able to re-connect to it from your switch as many times as you want (providing it doesn't crash). So go sit on your couch and stream some PC games!
 
-*Also please set your PC resolution to 1280x720p in Windows for getting **much** better performance of screen capturing while running the app.*
+On PC:
+  1. Install [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) (just unzip and execute `Driver Installer/ScpDriverInstaller.exe`). Otherwise the program will crash silently.
+  1. Set your PC resolution to `1280x720` in Windows for getting **much** better performance of screen capturing while running the app.
+  1. Run the desktop app `In-Home-Switching.exe`
+  1. In the desktop app, Start the server by clicking `Start Server`
+  1. Find the `IP address` of your desktop (you'll need this on the switch)
 
-On the Switch, find out its IP address (in the Internet settings) and start the app with your Switch CFW. Then type in the Switch's IP address on the PC app and hit the `Connect` button.
+On the Switch:
+  1. Copy the homebrew app `In-Home-Switching.nro` to your switch
+  1. Launch the homebrew app
+  1. Hit the textbox to enter the `IP address` of your desktop running the server
+  1. Hit the `Connect` button.
 
 ## Screenshots from Nintendo Switch
 
+![Homebrew](screenshots/switch.jpg "Main screen on Switch")
 ![Track Mania](screenshots/TrackMania.jpg "Track Mania on Switch")
 ![Witcher 3](screenshots/witcher.jpg "Witcher 3 on Switch")
 ![PC companion app](screenshots/PCApp.jpg "PC app for streaming screen")
@@ -62,6 +74,7 @@ The following steps were done on Windows 10.
 1. Run the newly installed `MSYS2` cmd prompt
 1. From MSYS2 cmd, install patch command by running `pacman -S patch`
 1. From MSYS2 cmd, install pkg-config by running `pacman -S pkg-config`
+1. From MSYS2 cmd, install SDL2 packages by running `pacman -S switch-sdl2 switch-sdl2_gfx switch-sdl2_image switch-sdl2_mixer switch-sdl2_ttf switch-glad`
 1. Get the patched ffmpeg build by running  `git clone -b ffmpeg_networking https://github.com/jakibaki/pacman-packages.git`
 1. Navigate to the `pacman-packages/switch/ffmpeg` directory and compile the package by running: `makepkg -sL`
 1. Install the built package by running `pacman -U switch-ffmpeg-4.0.1-1-any.pkg.tar.xz`
