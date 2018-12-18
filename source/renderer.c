@@ -102,10 +102,7 @@ void freeRenderer(RenderContext *context)
 }
 
 void applyOC(int *overclock_index, int diff)
-{
-    if (diff == 0)
-        return;
-    
+{    
     int newIndex =  *overclock_index + diff;
     if (newIndex < 0)
     {
@@ -116,7 +113,7 @@ void applyOC(int *overclock_index, int diff)
         newIndex = sizeof(clock_rates) / sizeof(int) - 1;
     }
 
-    if (newIndex != *overclock_index)
+    if (newIndex != *overclock_index || diff == 0)
     {
         *overclock_index = newIndex;
         pcvSetClockRate(PcvModule_Cpu, clock_rates[newIndex]);

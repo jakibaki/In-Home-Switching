@@ -253,6 +253,8 @@ int main(int argc, char **argv)
     server_address[0] = '\0';
     strcpy(server_address, config.server_address);
 
+    //applyOC(&config.overclock_index, 0);
+
 	TouchInfo touchInfo;
 	Touch_Init(&touchInfo);
 
