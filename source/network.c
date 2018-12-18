@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
+char server_address[256] = { 0 };
+
 void networkInit(const SocketInitConfig* conf) 
 {
     socketInitialize(conf);
@@ -20,6 +22,15 @@ void networkDestroy()
 {
     avformat_network_deinit();
     socketExit();
+}
+
+bool isValidAddress(const char* address)
+{
+    in_addr_t validate = inet_addr(address);
+    if (validate == (in_addr_t)(-1))
+        return false;
+
+    return true;
 }
 
 JoyConSocket* createJoyConSocket()
@@ -62,7 +73,7 @@ int connectJoyConSocket(JoyConSocket* connection, int port)
 
         // Todo: Find the best way for a user to update the server ip  
         struct sockaddr_in server;
-        server.sin_addr.s_addr = inet_addr("192.168.0.117");
+        server.sin_addr.s_addr = inet_addr(server_address);
         server.sin_family = AF_INET;
         server.sin_port = htons(port);
 
@@ -82,6 +93,7 @@ void sendJoyConInput(JoyConSocket* connection, const JoyPkg* pkg)
 {
     if (send(connection->sock, pkg, sizeof(JoyPkg), 0) != sizeof(JoyPkg))
     {
+        printf("Lost gamepad-connection\n");
         connection->sock = -1;
     }
 }

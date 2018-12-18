@@ -3,10 +3,12 @@
 
 #include <libavformat/avformat.h>
 #include <switch.h>
+#include <SDL2/SDL.h>
 
 typedef struct {
-    struct SwsContext *ctx_sws;
-    u8* gfxBuffer;
+    struct SwsContext* ctx_sws;
+    SDL_Texture* texture;
+    uint8_t* data;
 } RenderContext;
 
 

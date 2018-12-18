@@ -17,11 +17,16 @@ typedef struct
     short rJoyY;
 }JoyPkg;
 
+char server_address[256];
+
 /* Init nx network and av network */
 void networkInit(const SocketInitConfig* conf);
 
 /* Deinitialize nx network and av network*/
 void networkDestroy(); 
+
+/* Returns true if the string is a valid inet_addr */
+bool isValidAddress(const char* address);
 
 /* Creates the context for sending joycon inputs */
 JoyConSocket* createJoyConSocket();

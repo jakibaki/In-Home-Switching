@@ -56,7 +56,12 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lavformat -lavcodec -lswresample -lswscale -lavutil -lbz2 -lass -ltheora -lvorbis -logg -lm -lz -lnx
+LIBS	:= -lSDL2_ttf -lSDL2_image -lSDL2_mixer -lSDL2 -lSDL2_gfx \
+           -lglad -lEGL -lfreetype -lpng  -ljpeg -lvorbisidec -lmpg123 -lmodplug \
+           -lavformat -lavcodec -lswresample -lswscale -lavutil -lbz2 -lass -ltheora -lvorbis -logg -lm -lz -lnx \
+		   -lglad -lEGL -lglapi -ldrm_nouveau \
+           -lvorbisidec -logg -lmpg123 -lmodplug -lstdc++ \
+           -lnx -lminizip
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

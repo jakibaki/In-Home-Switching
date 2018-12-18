@@ -9,9 +9,6 @@
 /* Allocates a render context */
 RenderContext* createRenderer(void);
 
-/* Draws an image filling all screen */
-void drawSplash(RenderContext* context, const char* splashPath);
-
 /* Renders a frame recieved from server */
 void drawFrame(RenderContext* context, VideoContext* videoContext);
 
