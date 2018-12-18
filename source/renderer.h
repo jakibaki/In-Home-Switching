@@ -24,6 +24,6 @@ bool isVideoActive(RenderContext *context);
 void setVideoActive(RenderContext *context, bool active);
 
 /* Sets the switch overclock status */
-void applyOC(int *overclockIndex, int diff);
+void applyOC(int *overclock_index, int diff);
 
 #endif

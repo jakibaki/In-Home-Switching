@@ -39,7 +39,7 @@ EXEFS_SRC	:=	exefs_src
 ROMFS	:=	romfs
 APP_AUTHOR := jakibaki, D-VAmpire
 APP_TITLE := In-Home-Switching
-APP_VERSION := 0.1
+APP_VERSION := 0.2
 
 #---------------------------------------------------------------------------------
 # options for code generation

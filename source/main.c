@@ -44,6 +44,8 @@
 #include "network.h"
 #include "video.h"
 #include "renderer.h"
+#include "fs.h"
+#include "config.h"
 
 static char *clock_strings[] = {
     "333 MHz (underclocked, very slow)", 
@@ -54,7 +56,6 @@ static char *clock_strings[] = {
     "1785 MHz (strong overclock)"
     };
 
-int overclockIndex = 2;
 RenderContext* renderContext = NULL;
 
 static const SocketInitConfig socketInitConf = {
@@ -122,6 +123,8 @@ static Result Init_Services(void)
 
     networkInit(&socketInitConf);
 	Images_Load();
+    FS_Load();
+    Config_Load();
 
 	return 0;
 }
@@ -156,6 +159,9 @@ static void EnterServerAddress()
 		return;
 
     strcpy(server_address, osk_buffer);
+
+    strcpy(config.server_address, server_address);
+    Config_Save(config);
 }
 
 static void ConnectToServer()
@@ -165,7 +171,6 @@ static void ConnectToServer()
 
     if (!isValidAddress(server_address))
         return;
-
 
     renderContext = createRenderer();
     VideoContext* videoContext = createVideoContext();
@@ -231,7 +236,8 @@ static void ConnectToServer()
 
 static void ChangeOverClock(int diff)
 {
-    applyOC(&overclockIndex, diff);
+    applyOC(&config.overclock_index, diff);
+    Config_Save(config);
 }
 
 int main(int argc, char **argv)
@@ -245,7 +251,7 @@ int main(int argc, char **argv)
 	}
 
     server_address[0] = '\0';
-    strcpy(server_address, "192.168.0.117");
+    strcpy(server_address, config.server_address);
 
 	TouchInfo touchInfo;
 	Touch_Init(&touchInfo);
@@ -290,10 +296,10 @@ int main(int argc, char **argv)
         SDL_DrawImage(icon_up, overclockUpRect.x, overclockUpRect.y);
 
         SDLRect overclockTextRect = { 0 };
-        SDL_GetTextDimensions(10, clock_strings[overclockIndex], &overclockTextRect.width, &overclockTextRect.height); 
+        SDL_GetTextDimensions(10, clock_strings[config.overclock_index], &overclockTextRect.width, &overclockTextRect.height); 
         overclockTextRect.x = (148 - overclockTextRect.width / 2); 
         overclockTextRect.y = (260 - overclockTextRect.height / 2);
-	    SDL_DrawText(overclockTextRect.x, overclockTextRect.y, 10, TEXT_COLOR, clock_strings[overclockIndex]);
+	    SDL_DrawText(overclockTextRect.x, overclockTextRect.y, 10, TEXT_COLOR, clock_strings[config.overclock_index]);
 
         // Process input
 		hidScanInput();

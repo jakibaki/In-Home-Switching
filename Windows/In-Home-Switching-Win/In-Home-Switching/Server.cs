@@ -136,7 +136,7 @@ namespace InHomeSwitching
                     var synchronizeInvoke = d.Target as ISynchronizeInvoke;
                     if ((synchronizeInvoke != null) && synchronizeInvoke.InvokeRequired)
                     {
-                        synchronizeInvoke.EndInvoke(synchronizeInvoke.BeginInvoke(d, args));
+                        synchronizeInvoke.BeginInvoke(d, args);
                     }
                     else
                     {

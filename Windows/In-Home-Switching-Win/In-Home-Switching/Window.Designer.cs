@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Window));
             this.quality_bar = new System.Windows.Forms.TrackBar();
             this.label3 = new System.Windows.Forms.Label();
             this.toggle_button = new System.Windows.Forms.Button();
@@ -126,6 +127,7 @@
             this.Controls.Add(this.toggle_button);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.quality_bar);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximumSize = new System.Drawing.Size(351, 261);
             this.MinimumSize = new System.Drawing.Size(351, 261);
             this.Name = "Window";
