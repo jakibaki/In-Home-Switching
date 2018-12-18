@@ -11,7 +11,7 @@
 RenderContext* createRenderer(void);
 
 /* Draws an image filling all screen */
-void drawSplash(RenderContext* context, const char* splashPath);
+void drawSplash(RenderContext *context);
 
 /* Renders a frame recieved from server */
 void drawFrame(RenderContext* context, VideoContext* videoContext);
@@ -24,5 +24,11 @@ void setFrameAvail(RenderContext* context);
 
 /* Checks if a frame is ready to be drawn and sets that variable to false */
 bool checkFrameAvail(RenderContext* context);
+
+/* Returns true if there is a video playing right now */
+bool isVideoActive(RenderContext *context);
+
+/* Sets the video-playing status */
+void setVideoActive(RenderContext *context, bool active);
 
 #endif

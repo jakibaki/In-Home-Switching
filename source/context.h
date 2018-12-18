@@ -4,7 +4,8 @@
 #include <libavformat/avformat.h>
 #include <switch.h>
 #include <SDL.h>
-
+#include <SDL2/SDL_image.h>
+#include "SDL_FontCache.h"
 
 #define RESX 1280
 #define RESY 720
@@ -19,6 +20,7 @@ typedef struct
     SDL_Renderer *renderer;
     SDL_Texture *yuv_text;
 
+
     SDL_Rect rect;
 
     Mutex texture_mut;
@@ -29,6 +31,11 @@ typedef struct
 
     bool frame_avail;
     Mutex frame_avail_mut;
+    FC_Font* font;
+
+    bool video_active;
+    Mutex video_active_mut;
+
 } RenderContext;
 
 typedef struct

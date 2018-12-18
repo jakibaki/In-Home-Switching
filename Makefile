@@ -36,7 +36,6 @@ SOURCES		:=	source
 DATA		:=	data
 INCLUDES	:=	include
 EXEFS_SRC	:=	exefs_src
-ROMFS	:=	romfs
 APP_AUTHOR := jakibaki, D-VAmpire
 APP_TITLE := In-Home-Switching
 APP_VERSION := 0.1
@@ -58,12 +57,12 @@ ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 LIBS    := -lSDL2_ttf -lSDL2_image -lSDL2_mixer -lSDL2 -lSDL2_gfx \
-			-lpng  -ljpeg \
+			-ljpeg \
 			-lglad -lEGL -lglapi -ldrm_nouveau \
 			-lvorbisidec -logg -lmpg123 -lmodplug -lstdc++ \
 			-lglad -lEGL -lglapi -ldrm_nouveau \
 			-lavformat -lavcodec -lswresample -lswscale -lavutil -lbz2 -lass -ltheora -lvorbis -lopus\
-			-lnx -lm -lfreetype -lminizip -lz
+			-lnx -lm -lfreetype -lpng -lminizip -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

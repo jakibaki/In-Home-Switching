@@ -64,6 +64,7 @@ static const SocketInitConfig socketInitConf = {
 
 void switchInit()
 {
+    plInitialize();
     pcvInitialize();
     //pcvSetClockRate(PcvModule_Cpu, 1485000000);
     romfsInit();
@@ -76,6 +77,7 @@ void switchDestroy()
     networkDestroy();
     gfxExit();
     pcvExit();
+    plExit();
 }
 
 void startInput()
@@ -119,20 +121,25 @@ int main(int argc, char **argv)
 
     while (appletMainLoop())
     {
-        while (!checkFrameAvail(renderContext))
+        if (isVideoActive(renderContext))
         {
+            while (!checkFrameAvail(renderContext))
+            {
+            }
+
+            SDL_RenderClear(renderContext->renderer);
+
+            mutexLock(&renderContext->texture_mut);
+            SDL_UpdateYUVTexture(renderContext->yuv_text, &renderContext->rect, renderContext->YPlane, RESX,
+                                 renderContext->UPlane, RESX / 2,
+                                 renderContext->VPlane, RESX / 2);
+            mutexUnlock(&renderContext->texture_mut);
+
+            SDL_RenderCopy(renderContext->renderer, renderContext->yuv_text, NULL, NULL);
+            SDL_RenderPresent(renderContext->renderer);
+        } else {
+            drawSplash(renderContext);
         }
-
-        SDL_RenderClear(renderContext->renderer);
-
-        mutexLock(&renderContext->texture_mut);
-        SDL_UpdateYUVTexture(renderContext->yuv_text, &renderContext->rect, renderContext->YPlane, RESX,
-                             renderContext->UPlane, RESX / 2,
-                             renderContext->VPlane, RESX / 2);
-        mutexUnlock(&renderContext->texture_mut);
-
-        SDL_RenderCopy(renderContext->renderer, renderContext->yuv_text, NULL, NULL);
-        SDL_RenderPresent(renderContext->renderer);
     }
 
     /* Deinitialize all used systems */

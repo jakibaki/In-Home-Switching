@@ -3,6 +3,7 @@
 #include <switch.h>
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
+#include <unistd.h>
 #include "video.h"
 
 void flushSwapBuffers(void);
@@ -21,10 +22,9 @@ RenderContext *createRenderer()
             ;
     }
 
-    int mode_count = SDL_GetNumDisplayModes(0);
     const SDL_DisplayMode mode;
     SDL_GetDisplayMode(0, 1, &mode);
-    SDL_SetWindowDisplayMode(context->window, &mode);
+    //SDL_SetWindowDisplayMode(context->window, &mode);
 
     context->renderer = SDL_CreateRenderer(context->window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (context->renderer == NULL)
@@ -44,19 +44,27 @@ RenderContext *createRenderer()
 
     mutexInit(&context->texture_mut);
     mutexInit(&context->frame_avail_mut);
+    mutexInit(&context->video_active_mut);
     context->frame_avail = false;
+    context->video_active = false;
+
+    PlFontData fontData, fontExtData;
+    plGetSharedFontByType(&fontData, PlSharedFontType_Standard);
+    plGetSharedFontByType(&fontExtData, PlSharedFontType_NintendoExt);
+    context->font = FC_CreateFont();
+    FC_LoadFont_RW(context->font, context->renderer, SDL_RWFromMem((void *)fontData.address, fontData.size), SDL_RWFromMem((void *)fontExtData.address, fontExtData.size), 1, 40, FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
 
     return context;
 }
 
-void setFrameAvail(RenderContext* context)
+void setFrameAvail(RenderContext *context)
 {
     mutexLock(&context->frame_avail_mut);
     context->frame_avail = true;
     mutexUnlock(&context->frame_avail_mut);
 }
 
-bool checkFrameAvail(RenderContext* context)
+bool checkFrameAvail(RenderContext *context)
 {
     bool ret;
     mutexLock(&context->frame_avail_mut);
@@ -64,6 +72,22 @@ bool checkFrameAvail(RenderContext* context)
     context->frame_avail = false;
     mutexUnlock(&context->frame_avail_mut);
     return ret;
+}
+
+bool isVideoActive(RenderContext *context)
+{
+    bool ret;
+    mutexLock(&context->video_active_mut);
+    ret = context->video_active;
+    mutexUnlock(&context->video_active_mut);
+    return ret;
+}
+
+void setVideoActive(RenderContext *context, bool active)
+{
+    mutexLock(&context->video_active_mut);
+    context->video_active = active;
+    mutexUnlock(&context->video_active_mut);
 }
 
 /*
@@ -76,6 +100,35 @@ void drawSplash(RenderContext *context, const char *splashPath)
     flushSwapBuffers();
 }
 */
+
+void SDL_ClearScreen(RenderContext *context, SDL_Color colour)
+{
+    SDL_SetRenderDrawColor(context->renderer, colour.r, colour.g, colour.b, colour.a);
+    SDL_RenderClear(context->renderer);
+}
+
+void SDL_DrawText(RenderContext *context, int x, int y, SDL_Color colour, const char *text)
+{
+    FC_DrawColor(context->font, context->renderer, x, y, colour, text);
+}
+
+void drawSplash(RenderContext *context)
+{
+    u32 ip = gethostid();
+    char str_buf[300];
+    snprintf(str_buf, 300, "Your Switch is now ready for a PC to connect!\nIt has the IP-Address %u.%u.%u.%u\n"
+                           "\nInstructions can be found here:"
+                           "\nhttps://bit.ly/2QrR1Lb",
+             ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF);
+
+    SDL_Color black = {0, 0, 0, 255};
+    SDL_Color white = {230, 230, 230, 255};
+    SDL_ClearScreen(context, white);
+
+    SDL_DrawText(context, 170, 150, black, str_buf);
+
+    SDL_RenderPresent(context->renderer);
+}
 
 u64 old_time, new_time;
 void drawFrame(RenderContext *renderContext, VideoContext *videoContext)
@@ -100,12 +153,12 @@ void drawFrame(RenderContext *renderContext, VideoContext *videoContext)
     mutexUnlock(&renderContext->texture_mut);
     setFrameAvail(renderContext);
 
-    if(++videoContext->video_frame_count % 60 == 0) {
+    if (++videoContext->video_frame_count % 60 == 0)
+    {
         new_time = svcGetSystemTick();
         printf("Framerate: %f\n", 60.0 / ((new_time - old_time) / 19200000.0));
         old_time = new_time;
     }
-
 
     //memcpy(fbuf, rgbframe->data[0], RESX * RESY * 4);
 

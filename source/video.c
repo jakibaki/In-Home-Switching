@@ -204,6 +204,8 @@ int handleVid(VideoContext *context)
         return ret;
     }
 
+    setVideoActive(context->renderContext, true);
+
     context->fmt_ctx = fmt_ctx;
 
     // Retrieve stream information
@@ -272,7 +274,9 @@ int handleVid(VideoContext *context)
         decode_packet(context, &got_frame, &pkt);
     } while (got_frame);
 
-    printf("Demuxing succeeded.\n");
+    printf("Stream finished.\n");
+    checkFrameAvail(context->renderContext);
+    setVideoActive(context->renderContext, false);
 
     return ret;
 }
