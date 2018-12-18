@@ -12,4 +12,6 @@ int handleVid(VideoContext* context);
 /* Deallocates a video context */
 void freeVideoContext(VideoContext* context);
 
+/* Loop for receiving and decoding video */
+void videoLoop(void *context_ptr);
 #endif
