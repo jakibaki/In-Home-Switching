@@ -55,10 +55,23 @@ This app uses core overclocking to 1785 MHz on the Nintendo Switch. We use this 
   * GPU encoding on PC
 
 ## Build instructions
+The following steps were done on Windows 10.
 
-Use the PKGBUILD from [here](https://github.com/jakibaki/pacman-packages/tree/ffmpeg_networking/switch/ffmpeg) for ffmpeg on Switch with more protocols enabled.
+### Compile homebrew
+1. Install devkitpro from [here](https://devkitpro.org/wiki/devkitPro_pacman)
+1. Run the newly installed `MSYS2` cmd prompt
+1. From MSYS2 cmd, install patch command by running `pacman -S patch`
+1. From MSYS2 cmd, install pkg-config by running `pacman -S pkg-config`
+1. Get the patched ffmpeg build by running  `git clone -b ffmpeg_networking https://github.com/jakibaki/pacman-packages.git`
+1. Navigate to the `pacman-packages/switch/ffmpeg` directory and compile the package by running: `makepkg -sL`
+1. Install the built package by running `pacman -U switch-ffmpeg-4.0.1-1-any.pkg.tar.xz`
+1. Navigate to `In-Home-Switching\`
+1. Compile the homebrew by running `make`
 
-Everything else will follow here in short time (ask jakibaki on AtlasNX discord if necessary).
+### Compile desktop app
+1. Copy `ScpDriverInterface.dll` from the [Scp drivers zip](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) to `In-Home-Switching\Windows\`
+1. Open `In-Home-Switching\Windows\In-Home-Switching-Win\In-Home-Switching-Windows.sln` in Visual Studio
+1. Build the solution
 
 ## Troubleshooting
 
