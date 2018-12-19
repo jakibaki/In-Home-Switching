@@ -44,7 +44,6 @@
 #include "network.h"
 #include "video.h"
 #include "renderer.h"
-#include "fs.h"
 #include "config.h"
 
 static char *clock_strings[] = {
@@ -91,8 +90,6 @@ static void Term_Services(void)
 	networkDestroy();
 
 	nsExit();
-	usbCommsExit();
-    gfxExit();
 	SDL_HelperTerm();
 	romfsExit();
 	psmExit();
@@ -116,14 +113,11 @@ static Result Init_Services(void)
     if (R_FAILED(ret = romfsInit()))
         return ret;
 
-    gfxInitDefault();
-
     if (R_FAILED(ret = SDL_HelperInit()))
         return ret;
 
     networkInit(&socketInitConf);
 	Images_Load();
-    FS_Load();
     Config_Load();
 
 	return 0;
@@ -242,7 +236,8 @@ static void ChangeOverClock(int diff)
 
 int main(int argc, char **argv)
 {
-	Init_Services();
+	if (R_FAILED(Init_Services()))
+        return 0;
 
 	if (setjmp(exitJmp)) 
     {
@@ -253,7 +248,7 @@ int main(int argc, char **argv)
     server_address[0] = '\0';
     strcpy(server_address, config.server_address);
 
-    //applyOC(&config.overclock_index, 0);
+    applyOC(&config.overclock_index, 0);
 
 	TouchInfo touchInfo;
 	Touch_Init(&touchInfo);
@@ -350,7 +345,7 @@ int main(int argc, char **argv)
 		SDL_RenderDisplay();
 
 		if (kDown & KEY_PLUS)
-			longjmp(exitJmp, 1);
+			break;
 	}
 
 	Term_Services();
