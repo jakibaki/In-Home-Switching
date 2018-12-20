@@ -23,8 +23,7 @@ namespace Configsys
 
         public string IP { get; set; } = null;
         public int Quality { get; set; } = 25;
-
-
+        
         public Config()
         {
             if (File.Exists(CONFIG_PATH))
@@ -46,7 +45,7 @@ namespace Configsys
                                     IP = parts[1];
                                     break;
 
-                                case "quality":
+                                case "Quality":
                                     Quality = int.Parse(parts[1]);
                                     break;
                             }
@@ -62,7 +61,7 @@ namespace Configsys
             string[] lines = new string[]
             {
                 $"IP={IP}",
-                $"quality={Quality}"
+                $"Quality={Quality}"
             };
 
             File.WriteAllLines(CONFIG_PATH, lines);
