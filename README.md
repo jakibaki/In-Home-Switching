@@ -75,6 +75,14 @@ Your PC is probably too slow for encoding with the games/applications on. Try ot
 
 Well, in our tests we had 60 FPS on Windows 10 with low image quality... I guess you can try the same strategies as for fixing framedrops, I hope that helps.
 
+## Nightlies
+
+We now feature nightly builds of the Switch app (always based on current master branch). They can be found [here](https://bsnx.lavatech.top/in-home-switching/).
+These builds are considered experimental, so please do not panic if something crashes sometimes ;)
+
+Right now the nightlies feature massive performance increases. You can thus use the app without overclocking (if you still want to, just change the overclocking profile in-app). 
+Additionally, the IP of the Switch is shown as well.
+
 ## License
 
 This code is licensed GPLv3 and this has a reason: We do not want to see (or read about) any parts of this project in non-open-source software (everything that is not GPLv3 licensed). Please share the notion of free code for everyone.
@@ -91,3 +99,4 @@ This code is licensed GPLv3 and this has a reason: We do not want to see (or rea
 * [NX-Shell](https://github.com/joel16/NX-Shell) for teaching us how to use SDL
 * [Checkpoint](https://github.com/FlagBrew/Checkpoint) also for SDL examples
 * [SunTheCourier](https://github.com/SunTheCourier) for adding config support to our Windows client
+* [AveSatanas](https://gitlab.com/ao) for offering a server that automatically builds our nightlies
