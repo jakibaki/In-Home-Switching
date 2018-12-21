@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace InHomeSwitching.Window.Properties {
+namespace DesktopDuplication.Demo.Properties {
     using System;
     
     
