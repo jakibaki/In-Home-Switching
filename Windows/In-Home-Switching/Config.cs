@@ -23,7 +23,7 @@ namespace Configsys
 
         public string IP { get; set; } = null;
         public int Quality { get; set; } = 25;
-        
+
         public Config()
         {
             if (File.Exists(CONFIG_PATH))

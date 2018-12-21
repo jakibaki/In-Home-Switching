@@ -56,22 +56,22 @@ namespace InHomeSwitching.Window
 
         public enum InputKeys : ulong
         {
-            A     = 1,
-            B     = 1 << 1,
-            X     = 1 << 2,
-            Y     = 1 << 3,
-            LS    = 1 << 4,
-            RS    = 1 << 5,
-            L     = 1 << 6,
-            R     = 1 << 7,
-            ZL    = 1 << 8,
-            ZR    = 1 << 9,
-            Plus  = 1 << 10,
+            A = 1,
+            B = 1 << 1,
+            X = 1 << 2,
+            Y = 1 << 3,
+            LS = 1 << 4,
+            RS = 1 << 5,
+            L = 1 << 6,
+            R = 1 << 7,
+            ZL = 1 << 8,
+            ZR = 1 << 9,
+            Plus = 1 << 10,
             Minus = 1 << 11,
-            Left  = 1 << 12,
-            Up    = 1 << 13,
+            Left = 1 << 12,
+            Up = 1 << 13,
             Right = 1 << 14,
-            Down  = 1 << 15
+            Down = 1 << 15
         }
 
         public void Start(string ip, int quality)
@@ -219,42 +219,42 @@ namespace InHomeSwitching.Window
                     void map(InputKeys inkey, X360Buttons outkey)
                     {
                         if ((pkg.HeldKeys & (ulong)inkey) > 0)
-                            ctrl.Buttons  |= outkey;
+                            ctrl.Buttons |= outkey;
                         else ctrl.Buttons &= ~outkey;
                     }
 
-                    map(InputKeys.A,     X360Buttons.B);
-                    map(InputKeys.B,     X360Buttons.A);
-                    map(InputKeys.X,     X360Buttons.Y);
-                    map(InputKeys.Y,     X360Buttons.X);
-                                         
-                    map(InputKeys.L,     X360Buttons.LeftBumper);
-                    map(InputKeys.R,     X360Buttons.RightBumper);
+                    map(InputKeys.A, X360Buttons.B);
+                    map(InputKeys.B, X360Buttons.A);
+                    map(InputKeys.X, X360Buttons.Y);
+                    map(InputKeys.Y, X360Buttons.X);
 
-                    map(InputKeys.LS,    X360Buttons.LeftStick);
-                    map(InputKeys.RS,    X360Buttons.RightStick);
+                    map(InputKeys.L, X360Buttons.LeftBumper);
+                    map(InputKeys.R, X360Buttons.RightBumper);
 
-                    map(InputKeys.Plus,  X360Buttons.Start);
+                    map(InputKeys.LS, X360Buttons.LeftStick);
+                    map(InputKeys.RS, X360Buttons.RightStick);
+
+                    map(InputKeys.Plus, X360Buttons.Start);
                     map(InputKeys.Minus, X360Buttons.Back);
 
-                    map(InputKeys.Up,    X360Buttons.Up);
-                    map(InputKeys.Down,  X360Buttons.Down);
-                    map(InputKeys.Left,  X360Buttons.Left);
+                    map(InputKeys.Up, X360Buttons.Up);
+                    map(InputKeys.Down, X360Buttons.Down);
+                    map(InputKeys.Left, X360Buttons.Left);
                     map(InputKeys.Right, X360Buttons.Right);
 
                     if ((pkg.HeldKeys & (ulong)InputKeys.ZL) > 0)
-                        ctrl.LeftTrigger   = byte.MaxValue;
-                    else ctrl.LeftTrigger  = byte.MinValue;
+                        ctrl.LeftTrigger = byte.MaxValue;
+                    else ctrl.LeftTrigger = byte.MinValue;
 
                     if ((pkg.HeldKeys & (ulong)InputKeys.ZR) > 0)
-                        ctrl.RightTrigger  = byte.MaxValue;
+                        ctrl.RightTrigger = byte.MaxValue;
                     else ctrl.RightTrigger = byte.MinValue;
 
-                    ctrl.LeftStickX        = pkg.LJoyX;
-                    ctrl.LeftStickY        = pkg.LJoyY;
-                                           
-                    ctrl.RightStickX       = pkg.RJoyX;
-                    ctrl.RightStickY       = pkg.RJoyY;
+                    ctrl.LeftStickX = pkg.LJoyX;
+                    ctrl.LeftStickY = pkg.LJoyY;
+
+                    ctrl.RightStickX = pkg.RJoyX;
+                    ctrl.RightStickY = pkg.RJoyY;
 
                     scp.Report(1, ctrl.GetReport());
                 }
@@ -269,10 +269,10 @@ namespace InHomeSwitching.Window
             serverStream.Read(buf, 0, 0x10);
 
             pkg.HeldKeys = BitConverter.ToUInt64(buf, 0);
-            pkg.LJoyX    = BitConverter.ToInt16(buf, 8);
-            pkg.LJoyY    = BitConverter.ToInt16(buf, 10);
-            pkg.RJoyX    = BitConverter.ToInt16(buf, 12);
-            pkg.RJoyY    = BitConverter.ToInt16(buf, 14);
+            pkg.LJoyX = BitConverter.ToInt16(buf, 8);
+            pkg.LJoyY = BitConverter.ToInt16(buf, 10);
+            pkg.RJoyX = BitConverter.ToInt16(buf, 12);
+            pkg.RJoyY = BitConverter.ToInt16(buf, 14);
 
             return pkg;
         }

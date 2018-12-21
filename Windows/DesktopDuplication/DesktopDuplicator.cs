@@ -136,8 +136,9 @@ namespace InHomeSwitching
             {
                 ReleaseFrame();
             }
-            catch { 
-            //    throw new DesktopDuplicationException("Couldn't release frame.");  
+            catch
+            {
+                //    throw new DesktopDuplicationException("Couldn't release frame.");  
             }
             return frame;
         }
@@ -235,7 +236,7 @@ namespace InHomeSwitching
                 pointerInfo.LastTimeStamp = frameInfo.LastMouseUpdateTime;
                 pointerInfo.Visible = frameInfo.PointerPosition.Visible;
             }
-                        
+
             // No new shape
             if (frameInfo.PointerShapeBufferSize == 0)
                 return;
@@ -267,7 +268,7 @@ namespace InHomeSwitching
             //frame.CursorVisible = pointerInfo.Visible;
             frame.CursorLocation = new System.Drawing.Point(pointerInfo.Position.X, pointerInfo.Position.Y);
         }
-        
+
         private void ProcessFrame(DesktopFrame frame)
         {
             // Get the desktop capture texture
