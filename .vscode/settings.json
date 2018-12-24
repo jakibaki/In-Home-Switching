@@ -5,6 +5,12 @@
       "renderer.h": "c",
       "network.h": "c",
       "input.h": "c",
+<<<<<<< HEAD
       "context.h": "c"
+=======
+      "context.h": "c",
+      "sdl.h": "c",
+      "sdl2_gfxprimitives.h": "c"
+>>>>>>> 6c8b29e99c8fc798f3e88407cb31d83de8b4e60c
     }
 }

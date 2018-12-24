@@ -69,7 +69,7 @@
             this.quality_bar.TabIndex = 7;
             this.quality_bar.Tag = "";
             this.quality_bar.TickFrequency = 5;
-            this.quality_bar.Value = 21;
+            this.quality_bar.Value = 25;
             // 
             // label3
             // 
@@ -119,7 +119,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(189, 185);
+            this.label4.Location = new System.Drawing.Point(184, 185);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(28, 13);
             this.label4.TabIndex = 13;

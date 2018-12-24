@@ -32,10 +32,10 @@
 
 */
 
-
 #include <libavutil/samplefmt.h>
 
 #include <switch.h>
+#include <SDL.h>
 
 #include "context.h"
 #include "input.h"
@@ -46,10 +46,10 @@
 static const SocketInitConfig socketInitConf = {
     .bsdsockets_version = 1,
 
-    .tcp_tx_buf_size = 0x8000,
-    .tcp_rx_buf_size = 0x10000,
-    .tcp_tx_buf_max_size = 0x40000,
-    .tcp_rx_buf_max_size = 0x40000,
+    .tcp_tx_buf_size = 0x80000,
+    .tcp_rx_buf_size = 0x100000,
+    .tcp_tx_buf_max_size = 0x400000,
+    .tcp_rx_buf_max_size = 0x400000,
 
     .udp_tx_buf_size = 0xA2400,
     .udp_rx_buf_size = 0xAA500,
@@ -62,13 +62,13 @@ static const SocketInitConfig socketInitConf = {
     .dns_timeout = 0,
 };
 
+<<<<<<< HEAD
 
 void switchInit() 
 {
     pcvInitialize();
     pcvSetClockRate(PcvModule_Cpu, 1785000000);
     romfsInit();
-    gfxInitDefault();
     networkInit(&socketInitConf);
 }
 
@@ -77,20 +77,29 @@ void switchDestroy()
     networkDestroy();
     gfxExit();
     pcvExit();
+    plExit();
+}
+
+void startInput()
+{
+    static Thread inputHandlerThread;
+    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 1);
+    threadStart(&inputHandlerThread);
+}
+
+void startRender(VideoContext *videoContext)
+{
+    static Thread renderThread;
+    threadCreate(&renderThread, videoLoop, videoContext, 0x1000000, 0x2b, 2);
+    threadStart(&renderThread);
+>>>>>>> 6c8b29e99c8fc798f3e88407cb31d83de8b4e60c
 }
 
 void startInput() 
 {
-    static Thread inputHandlerThread;
-    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 0);
-    threadStart(&inputHandlerThread);
-}
+    RenderContext *renderContext = NULL;
+    VideoContext *videoContext = NULL;
 
-int main(int argc, char **argv)
-{
-    RenderContext* renderContext = NULL;
-    VideoContext* videoContext = NULL;
-    
     /* Init all switch required systems */
     switchInit();
     renderContext = createRenderer();
@@ -100,16 +109,20 @@ int main(int argc, char **argv)
     /* Run input handling in background */
     startInput();
 
-    /* Main thread should not be runing the main loop */
-    /* It should wait all its workers with thread join */
+    startRender(videoContext);
+
     while (appletMainLoop())
     {
-        drawSplash(renderContext, "romfs:/splash.rgba");
-        handleVid(videoContext);
+        if (isVideoActive(renderContext))
+        {
+            displayFrame(renderContext);
+        } else {
+            drawSplash(renderContext);
+        }
     }
 
     /* Deinitialize all used systems */
     freeRenderer(renderContext);
-    // freeVideoContext(videoContext);
+    freeVideoContext(videoContext);
     switchDestroy();
 }

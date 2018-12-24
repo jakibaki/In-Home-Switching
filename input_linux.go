@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 
 	uinput "github.com/ynsta/uinput"
 )
@@ -85,7 +86,7 @@ func initInput() {
 }
 
 func main() {
-	conn, err := net.Dial("tcp", "192.168.178.27:2223")
+	conn, err := net.Dial("tcp", os.Args[1]+":2223")
 	if err != nil {
 		log.Fatalln("Couldn't connect to switch!")
 	}
