@@ -62,13 +62,13 @@ static const SocketInitConfig socketInitConf = {
     .dns_timeout = 0,
 };
 
-<<<<<<< HEAD
-
-void switchInit() 
+void switchInit()
 {
+    plInitialize();
     pcvInitialize();
-    pcvSetClockRate(PcvModule_Cpu, 1785000000);
+
     romfsInit();
+    //gfxInitDefault();
     networkInit(&socketInitConf);
 }
 
@@ -92,10 +92,9 @@ void startRender(VideoContext *videoContext)
     static Thread renderThread;
     threadCreate(&renderThread, videoLoop, videoContext, 0x1000000, 0x2b, 2);
     threadStart(&renderThread);
->>>>>>> 6c8b29e99c8fc798f3e88407cb31d83de8b4e60c
 }
 
-void startInput() 
+int main(int argc, char **argv)
 {
     RenderContext *renderContext = NULL;
     VideoContext *videoContext = NULL;

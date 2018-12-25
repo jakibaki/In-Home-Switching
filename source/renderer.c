@@ -8,9 +8,9 @@
 
 void flushSwapBuffers(void);
 
-<<<<<<< HEAD
-RenderContext* createRenderer()
-{
+static char *clock_strings[] = {
+    "333 MHz (underclocked, very slow)", "710 MHz (underclocked, slow)", "1020 MHz (standard, not overclocked)", "1224 MHz (slightly overclocked)", "1581 MHz (overclocked)", "1785 MHz (strong overclock)"};
+
 static int clock_rates[] = {
     333000000, 710000000, 1020000000, 1224000000, 1581000000, 1785000000};
 
@@ -202,9 +202,9 @@ void displayFrame(RenderContext *renderContext)
 }
 
 void flushSwapBuffers()
->>>>>>> 6c8b29e99c8fc798f3e88407cb31d83de8b4e60c
 {
     gfxFlushBuffers();
+    gfxSwapBuffers();
 }
 
 void freeRenderer(RenderContext *context)

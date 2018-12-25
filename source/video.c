@@ -122,7 +122,11 @@ static int open_codec_context(VideoContext *context, enum AVMediaType type)
     AVStream *st;
     AVCodec *dec = NULL;
 
+    ret = av_find_best_stream(context->fmt_ctx, type, -1, -1, NULL, 0);
+    if (ret < 0)
+    {
         fprintf(stderr, "Could not find %s stream in input file \n",
+                av_get_media_type_string(type));
         return ret;
     }
     else
@@ -217,14 +221,14 @@ int handleVid(VideoContext *context)
         context->video_stream = fmt_ctx->streams[context->video_stream_idx];
 
         // Allocate image where the decoded image will be put
-<<<<<<< HEAD
-        ret = av_image_alloc(context->video_dst_data, 
-                                context->video_dst_linesize,
+        ret = av_image_alloc(context->video_dst_data,
+                             context->video_dst_linesize,
+                             context->video_dec_ctx->width,
                              context->video_dec_ctx->height,
                              context->video_dec_ctx->pix_fmt, 1);
->>>>>>> 6c8b29e99c8fc798f3e88407cb31d83de8b4e60c
         if (ret < 0)
         {
+            char errbuf[100];
             av_strerror(ret, errbuf, 100);
             fprintf(stderr, "Could not allocate raw video buffer %s\n", errbuf);
             return ret;
@@ -272,5 +276,7 @@ int handleVid(VideoContext *context)
 
     printf("Stream finished.\n");
     checkFrameAvail(context->renderContext);
+    setVideoActive(context->renderContext, false);
+
     return ret;
 }
