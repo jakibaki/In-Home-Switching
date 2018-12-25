@@ -30,7 +30,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #     - icon.jpg
 #     - <libnx folder>/default_icon.jpg
 #---------------------------------------------------------------------------------
-TARGET		:=	$(notdir $(CURDIR))
+TARGET		:=	out/$(notdir $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data
@@ -39,9 +39,6 @@ EXEFS_SRC	:=	exefs_src
 APP_AUTHOR := jakibaki, D-VAmpire
 APP_TITLE := In-Home-Switching
 APP_VERSION := 0.1
-
-
-
 
 
 ARCH	:=	-march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE
@@ -150,11 +147,16 @@ endif
 .PHONY: $(BUILD) clean all
 
 #---------------------------------------------------------------------------------
-all: $(BUILD)
+all: directories  $(BUILD)
 
-$(BUILD):
+$(BUILD): directories 
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+
+#---------------------------------------------------------------------------------
+
+directories:
+	mkdir -p out
 
 #---------------------------------------------------------------------------------
 clean:

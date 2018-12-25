@@ -60,6 +60,22 @@ Use the PKGBUILD from [here](https://github.com/jakibaki/pacman-packages/tree/ff
 
 Everything else will follow here in short time (ask jakibaki on AtlasNX discord if necessary).
 
+### Docker build for Switch App
+
+1. Build docker image
+
+```
+docker build . -t in-home-switching-builder
+```
+
+2. If `out` directory doesn't exist, create it at the root of project directory.
+
+3. Run the image, sharing files at out folder. *Note that `pwd` command may not work properly on windows*
+
+```
+docker run -a stdout -a stderr -v $(pwd)/out:/In-Home-Switching/out in-home-switching-builder
+```
+
 ## Troubleshooting
 
 ### *Nice videos, but sadly that delay makes it unplayable*
