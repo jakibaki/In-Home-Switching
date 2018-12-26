@@ -152,7 +152,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\InHomeSwitching.png" />
-    <None Include="Resources\InHomeSwitching1.png" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="ScpDriverInterface.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

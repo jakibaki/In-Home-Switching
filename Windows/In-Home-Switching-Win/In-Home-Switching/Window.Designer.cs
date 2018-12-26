@@ -34,18 +34,18 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.connect_status = new System.Windows.Forms.ToolStripStatusLabel();
             this.toggle_button = new System.Windows.Forms.Button();
-            this.inhomeswitching_picture = new System.Windows.Forms.PictureBox();
-            this.under = new System.Windows.Forms.PictureBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.save_button = new System.Windows.Forms.Button();
             this.fiftym_label = new System.Windows.Forms.Label();
             this.onem_label = new System.Windows.Forms.Label();
             this.settings_label = new System.Windows.Forms.Label();
+            this.inhomeswitching_picture = new System.Windows.Forms.PictureBox();
+            this.under = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.quality_bar)).BeginInit();
             this.statusStrip1.SuspendLayout();
+            this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.inhomeswitching_picture)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.under)).BeginInit();
-            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // ip_box
@@ -107,27 +107,6 @@
             this.toggle_button.UseVisualStyleBackColor = false;
             this.toggle_button.Click += new System.EventHandler(this.Toggle_button_Click);
             // 
-            // inhomeswitching_picture
-            // 
-            this.inhomeswitching_picture.BackColor = System.Drawing.Color.Transparent;
-            this.inhomeswitching_picture.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.inhomeswitching_picture.Image = ((System.Drawing.Image)(resources.GetObject("inhomeswitching_picture.Image")));
-            this.inhomeswitching_picture.Location = new System.Drawing.Point(12, 12);
-            this.inhomeswitching_picture.Name = "inhomeswitching_picture";
-            this.inhomeswitching_picture.Size = new System.Drawing.Size(760, 140);
-            this.inhomeswitching_picture.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.inhomeswitching_picture.TabIndex = 16;
-            this.inhomeswitching_picture.TabStop = false;
-            // 
-            // under
-            // 
-            this.under.BackColor = System.Drawing.Color.RoyalBlue;
-            this.under.Location = new System.Drawing.Point(0, -5);
-            this.under.Name = "under";
-            this.under.Size = new System.Drawing.Size(784, 157);
-            this.under.TabIndex = 17;
-            this.under.TabStop = false;
-            // 
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.SystemColors.Control;
@@ -181,6 +160,27 @@
             this.settings_label.TabIndex = 8;
             this.settings_label.Text = "Settings";
             // 
+            // inhomeswitching_picture
+            // 
+            this.inhomeswitching_picture.BackColor = System.Drawing.Color.Transparent;
+            this.inhomeswitching_picture.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.inhomeswitching_picture.Image = global::DesktopDuplication.Demo.Properties.Resources.InHomeSwitching;
+            this.inhomeswitching_picture.Location = new System.Drawing.Point(12, 12);
+            this.inhomeswitching_picture.Name = "inhomeswitching_picture";
+            this.inhomeswitching_picture.Size = new System.Drawing.Size(760, 140);
+            this.inhomeswitching_picture.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.inhomeswitching_picture.TabIndex = 16;
+            this.inhomeswitching_picture.TabStop = false;
+            // 
+            // under
+            // 
+            this.under.BackColor = System.Drawing.Color.RoyalBlue;
+            this.under.Location = new System.Drawing.Point(0, -5);
+            this.under.Name = "under";
+            this.under.Size = new System.Drawing.Size(784, 157);
+            this.under.TabIndex = 17;
+            this.under.TabStop = false;
+            // 
             // Window
             // 
             this.BackColor = System.Drawing.SystemColors.AppWorkspace;
@@ -201,10 +201,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.quality_bar)).EndInit();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.inhomeswitching_picture)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.under)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.inhomeswitching_picture)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.under)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -129,7 +129,7 @@ namespace InHomeSwitching.Window
             {
                 StartInfo = new ProcessStartInfo()
                 {
-                    FileName = "ffmpeg.exe",
+                    FileName = "C:\\ffmpeg\\bin\\ffmpeg.exe",
                     Arguments = string.Format(ffmpeg_args, resX, resY, quality, ip),
                     UseShellExecute = false,
                     RedirectStandardInput = true,
