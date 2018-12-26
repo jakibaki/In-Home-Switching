@@ -17,14 +17,14 @@ using System.IO;
 
 namespace Configsys
 {
-    public class Config
+    public class config
     {
         private const string CONFIG_PATH = "config.txt";
 
         public string IP { get; set; } = null;
         public int Quality { get; set; } = 25;
         
-        public Config()
+        public config()
         {
             if (File.Exists(CONFIG_PATH))
             {
