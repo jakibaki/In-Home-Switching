@@ -42,6 +42,7 @@
 #include "video.h"
 #include "network.h"
 #include "renderer.h"
+#include "audio.h"
 
 static const SocketInitConfig socketInitConf = {
     .bsdsockets_version = 1,
@@ -70,10 +71,15 @@ void switchInit()
     romfsInit();
     //gfxInitDefault();
     networkInit(&socketInitConf);
+
+    audoutInitialize();
+    audoutStartAudioOut();
 }
 
 void switchDestroy()
 {
+    audoutStopAudioOut();
+    audoutExit();
     networkDestroy();
     gfxExit();
     pcvExit();
@@ -85,6 +91,14 @@ void startInput()
     static Thread inputHandlerThread;
     threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 1);
     threadStart(&inputHandlerThread);
+}
+
+void startAudio()
+{
+    static Thread audioHandlerThread;
+    // On same thread as input and preemptive
+    threadCreate(&audioHandlerThread, audioHandlerLoop, NULL, 0x10000, 0x2b, 1);
+    threadStart(&audioHandlerThread);
 }
 
 void startRender(VideoContext *videoContext)
@@ -105,10 +119,14 @@ int main(int argc, char **argv)
     videoContext = createVideoContext();
     videoContext->renderContext = renderContext;
 
+    /* Run audio handling in background */
+    startAudio();
+
+    startRender(videoContext);
+
     /* Run input handling in background */
     startInput();
 
-    startRender(videoContext);
 
     while (appletMainLoop())
     {
