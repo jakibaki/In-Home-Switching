@@ -53,8 +53,7 @@ int wait_for_conn()
     return retsock;
 }
 
-
-#define BUF_COUNT 2
+#define BUF_COUNT 4
 AudioOutBuffer audiobuf[BUF_COUNT];
 u8 *buf_data[BUF_COUNT];
 int curBuf = 0;
@@ -83,12 +82,13 @@ void play_buf(int buffer_size, int data_size)
     swapbuf;
 }
 
-#define MIN_LEFT_SOCK 15000
-char bs_buf[MIN_LEFT_SOCK];
+#define MIN_LEFT_SOCK 2000 // TODO: Tweak those
+#define MAX_LEFT_SOCK 5000
+char bs_buf[MAX_LEFT_SOCK];
 
 void audioHandlerLoop()
 {
-    u32 data_size = (SAMPLECOUNT * CHANNELCOUNT * BYTESPERSAMPLE);
+    u32 data_size = 960; //(SAMPLECOUNT * CHANNELCOUNT * BYTESPERSAMPLE);
     u32 buffer_size = (data_size + 0xfff) & ~0xfff;
 
     for (int curBuf = 0; curBuf < BUF_COUNT; curBuf++)
@@ -98,30 +98,43 @@ void audioHandlerLoop()
 
     int sock = wait_for_conn();
 
-    int played =0;
+    int played = 0;
     while (1)
     {
 
         //memset(buf_data[curBuf], 0, buffer_size); // TODO: probably not needed
-        
-        int ret = recv(sock, buf_data[curBuf], data_size, MSG_WAITALL);
-        if(ret < 0) {
-            perror("Oh no!\n");
-            while(1);
-        }
 
-        // We "peek" the socket to find out how much data is left in the buffer and decide if we want to play or skip the samples
-        int n_bytes = recv(sock, bs_buf, MIN_LEFT_SOCK, MSG_PEEK);
-        if (n_bytes < MIN_LEFT_SOCK)
+        // We "peek" the socket to find out how much data is left and apply "corrections" if necessary
+        if (played % 60 == 0 )
         {
-            //armDCacheFlush(buf_data, buffer_size);
-            play_buf(buffer_size, data_size);
-            played++;
-        } else {
-            //recv(sock, bs_buf, MIN_LEFT_SOCK, 0);
-        }
-    }
+            int n_bytes = recv(sock, bs_buf, MAX_LEFT_SOCK, MSG_PEEK);
+            while (n_bytes < MIN_LEFT_SOCK)
+            {
+                svcSleepThread(100000);
+                n_bytes = recv(sock, bs_buf, MIN_LEFT_SOCK, MSG_PEEK);
+            }
 
+            while (n_bytes >= MAX_LEFT_SOCK)
+            {
+                recv(sock, bs_buf, data_size*2, MSG_WAITALL);
+                svcSleepThread(1000); // Just yielding resources
+                n_bytes = recv(sock, bs_buf, MAX_LEFT_SOCK, MSG_PEEK);
+            }
+        }
+
+        int ret = recv(sock, buf_data[curBuf], data_size, MSG_WAITALL);
+        if (ret < 0)
+        {
+            perror("Oh no!\n");
+            while (1)
+                ;
+        }
+
+        //armDCacheFlush(buf_data, buffer_size);
+        play_buf(buffer_size, data_size);
+        svcSleepThread(1000); // Just yielding resources
+        played++;
+    }
 
     for (int curBuf = 0; curBuf < BUF_COUNT; curBuf++)
     {

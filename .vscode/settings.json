@@ -8,6 +8,8 @@
       "context.h": "c",
       "sdl.h": "c",
       "sdl2_gfxprimitives.h": "c",
-      "twili.h": "c"
+      "twili.h": "c",
+      "socket.h": "c",
+      "types.h": "c"
     }
 }
