@@ -20,37 +20,27 @@
 #define SAMPLECOUNT (SAMPLERATE / FRAMERATE)
 #define BYTESPERSAMPLE 2
 
-int listenfd = -1;
-int wait_for_conn()
+void diep(char *s)
 {
-    if (listenfd == -1)
-    {
-        struct sockaddr_in server;
+    perror(s);
+    while(1);
+}
 
-        listenfd = socket(AF_INET, SOCK_STREAM, 0);
-        server.sin_family = AF_INET;
-        server.sin_addr.s_addr = INADDR_ANY;
-        server.sin_port = htons(2224);
+int setup_socket()
+{
+    struct sockaddr_in si_me, si_other;
+    int s;
 
-        if (bind(listenfd, (struct sockaddr *)&server, sizeof(server)) < 0)
-        {
-            close(listenfd);
-            listenfd = -1;
-            return 0;
-        }
-        listen(listenfd, 1);
-    }
+    if ((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+        diep("socket");
 
-    struct sockaddr_in client;
-    int c = sizeof(struct sockaddr_in);
-    int retsock = accept(listenfd, (struct sockaddr *)&client, (socklen_t *)&c);
-    if (retsock < 0)
-    {
-        close(listenfd);
-        listenfd = -1;
-        return wait_for_conn();
-    }
-    return retsock;
+    memset((char *)&si_me, 0, sizeof(si_me));
+    si_me.sin_family = AF_INET;
+    si_me.sin_port = htons(2224);
+    si_me.sin_addr.s_addr = htonl(INADDR_ANY);
+    if (bind(s, &si_me, sizeof(si_me)) == -1)
+        diep("bind");
+    return s;
 }
 
 #define BUF_COUNT 4
@@ -96,43 +86,29 @@ void audioHandlerLoop()
         buf_data[curBuf] = memalign(0x1000, buffer_size);
     }
 
-    int sock = wait_for_conn();
-
+    int sock = setup_socket();
+    printf("%d\n", sock);
     int played = 0;
     while (1)
     {
-
-        //memset(buf_data[curBuf], 0, buffer_size); // TODO: probably not needed
-
-        // We "peek" the socket to find out how much data is left and apply "corrections" if necessary
-        if (played % 60 == 0 )
-        {
-            int n_bytes = recv(sock, bs_buf, MAX_LEFT_SOCK, MSG_PEEK);
-            while (n_bytes < MIN_LEFT_SOCK)
-            {
-                svcSleepThread(100000);
-                n_bytes = recv(sock, bs_buf, MIN_LEFT_SOCK, MSG_PEEK);
-            }
-
-            while (n_bytes >= MAX_LEFT_SOCK)
-            {
-                recv(sock, bs_buf, data_size*2, MSG_WAITALL);
-                svcSleepThread(1000); // Just yielding resources
-                n_bytes = recv(sock, bs_buf, MAX_LEFT_SOCK, MSG_PEEK);
-            }
-        }
-
-        int ret = recv(sock, buf_data[curBuf], data_size, MSG_WAITALL);
+        struct sockaddr_in si_other;
+        int slen = sizeof si_other;
+        int ret = recvfrom(sock, buf_data[curBuf], data_size, 0, &si_other, &slen);
         if (ret < 0)
         {
-            perror("Oh no!\n");
-            while (1)
-                ;
+            perror("recv failed:");
+            continue;
+        }
+        if (ret != data_size)
+        {
+            // This may or may not be bad
+
+            //printf("not %d big! %d\n", data_size, ret);
+            //continue;
         }
 
         //armDCacheFlush(buf_data, buffer_size);
-        play_buf(buffer_size, data_size);
-        svcSleepThread(1000); // Just yielding resources
+        play_buf(buffer_size, ret);
         played++;
     }
 
@@ -140,6 +116,4 @@ void audioHandlerLoop()
     {
         free(buf_data[curBuf]);
     }
-
-    return 0;
 }
