@@ -52,8 +52,8 @@ static const SocketInitConfig socketInitConf = {
     .tcp_tx_buf_max_size = 0x400000,
     .tcp_rx_buf_max_size = 0x400000,
 
-    .udp_tx_buf_size = 0xA2400,
-    .udp_rx_buf_size = 0xAA500,
+    .udp_tx_buf_size = 0x2400,
+    .udp_rx_buf_size = 0xA500,
 
     .sb_efficiency = 4,
 
@@ -89,7 +89,7 @@ void switchDestroy()
 void startInput()
 {
     static Thread inputHandlerThread;
-    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 1);
+    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 0);
     threadStart(&inputHandlerThread);
 }
 
@@ -97,7 +97,8 @@ void startAudio()
 {
     static Thread audioHandlerThread;
     // On same thread as input and preemptive
-    threadCreate(&audioHandlerThread, audioHandlerLoop, NULL, 0x10000, 0x2b, 1);
+    Result res = threadCreate(&audioHandlerThread, audioHandlerLoop, NULL, 0x10000, 0x20, 1);
+    printf("%x\n", res);
     threadStart(&audioHandlerThread);
 }
 
@@ -125,7 +126,7 @@ int main(int argc, char **argv)
     startRender(videoContext);
 
     /* Run input handling in background */
-    startInput();
+    //startInput();
 
 
     while (appletMainLoop())
