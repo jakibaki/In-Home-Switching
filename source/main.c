@@ -98,7 +98,6 @@ void startAudio()
     static Thread audioHandlerThread;
     // On same thread as input and preemptive
     Result res = threadCreate(&audioHandlerThread, audioHandlerLoop, NULL, 0x10000, 0x20, 1);
-    printf("%x\n", res);
     threadStart(&audioHandlerThread);
 }
 

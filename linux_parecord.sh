@@ -43,7 +43,8 @@ done
 module_id=$(pactl load-module module-combine-sink sink_name=record-n-play slaves=$default_output sink_properties=device.description="Record-and-Play")
 
 pactl move-sink-input $index record-n-play 
-parec --raw --process-time=10 --latency=10 --rate 48000 --format=s16le --channels 2 -d record-n-play.monitor | nc 192.168.178.22 2224 #192.168.178.22 2222
+parec --raw --process-time=10 --latency=10 --rate 48000 --format=s16le --channels 2 -d record-n-play.monitor | ffmpeg -f s16le -ar 48000 -ac 2 -c:a pcm_s16le -i - -f s16le -ar 48000 -c:a pcm_s16le udp://192.168.178.22:2224?pkt_size=960
+#nc 192.168.178.22 2224 #192.168.178.22 2222
 # export my variables so that cleanup function can access them
 export index,curr_sink,module_id
 cleanup
