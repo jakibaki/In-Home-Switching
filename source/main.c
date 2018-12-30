@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     startRender(videoContext);
 
     /* Run input handling in background */
-    //startInput();
+    startInput();
 
 
     while (appletMainLoop())
