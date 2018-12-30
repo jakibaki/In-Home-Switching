@@ -43,7 +43,7 @@ int setup_socket()
     return s;
 }
 
-#define BUF_COUNT 4
+#define BUF_COUNT 3
 AudioOutBuffer audiobuf[BUF_COUNT];
 u8 *buf_data[BUF_COUNT];
 int curBuf = 0;
@@ -54,6 +54,12 @@ int audout_filled = 0;
 void play_buf(int buffer_size, int data_size)
 {
 
+    if (audout_filled >= BUF_COUNT)
+    {
+        u32 released_count;
+        audoutWaitPlayFinish(&audout_released_buf, &released_count, U64_MAX);
+    }
+
     audiobuf[curBuf].next = 0;
     audiobuf[curBuf].buffer = buf_data[curBuf];
     audiobuf[curBuf].buffer_size = buffer_size;
@@ -63,12 +69,6 @@ void play_buf(int buffer_size, int data_size)
 
     audout_filled++;
 
-    if (audout_filled >= BUF_COUNT)
-    {
-        u32 released_count;
-        audoutWaitPlayFinish(&audout_released_buf, &released_count, UINT64_MAX);
-    }
-
     swapbuf;
 }
 
@@ -76,9 +76,37 @@ void play_buf(int buffer_size, int data_size)
 #define MAX_LEFT_SOCK 5000
 char bs_buf[MAX_LEFT_SOCK];
 
+// out_buf has to be in_buf_size*fact*2 big
+void resample(unsigned short *in_buf, int in_buf_size, unsigned short *out_buf, int fact)
+{
+    int channels = 2;
+
+    for (int i = 0; i < in_buf_size / sizeof(unsigned short); i += channels)
+    {
+        int out_base = i * fact;
+
+        for (int j = 0; j < fact; j++)
+        {
+            for (int c = 0; c < channels; c++)
+            {
+                out_buf[out_base++] = in_buf[i + c];
+            }
+        }
+    }
+}
+
 void audioHandlerLoop()
 {
-    u32 data_size = 960; //(SAMPLECOUNT * CHANNELCOUNT * BYTESPERSAMPLE);
+
+
+    u32 data_size = 1920; //(SAMPLECOUNT * CHANNELCOUNT * BYTESPERSAMPLE);
+
+    int inrate = 16000;
+    int outrate = 48000;
+
+    int fact = outrate/inrate;
+    char in_buf[data_size/fact];
+
     u32 buffer_size = (data_size + 0xfff) & ~0xfff;
 
     for (int curBuf = 0; curBuf < BUF_COUNT; curBuf++)
@@ -93,22 +121,27 @@ void audioHandlerLoop()
     {
         struct sockaddr_in si_other;
         int slen = sizeof si_other;
-        int ret = recvfrom(sock, buf_data[curBuf], data_size, 0, &si_other, &slen);
+        int ret = recvfrom(sock, in_buf, sizeof(in_buf), 0, &si_other, &slen);
+
         if (ret < 0)
         {
             perror("recv failed:");
             continue;
         }
-        if (ret != data_size)
+        if (ret != sizeof(in_buf))
         {
+            printf("Bad input %d\n", ret);
+            
+            continue;
             // This may or may not be bad
 
             //printf("not %d big! %d\n", data_size, ret);
             //continue;
         }
 
-        //armDCacheFlush(buf_data, buffer_size);
-        play_buf(buffer_size, ret);
+        resample((unsigned short*) in_buf, sizeof(in_buf), (unsigned short*) buf_data[curBuf], fact);
+        armDCacheFlush(buf_data[curBuf], buffer_size);
+        play_buf(buffer_size, data_size);
         played++;
     }
 
