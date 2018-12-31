@@ -43,7 +43,7 @@ int setup_socket()
     return s;
 }
 
-#define BUF_COUNT 3
+#define BUF_COUNT 5
 AudioOutBuffer audiobuf[BUF_COUNT];
 u8 *buf_data[BUF_COUNT];
 int curBuf = 0;
@@ -140,7 +140,6 @@ void audioHandlerLoop()
         }
 
         resample((unsigned short*) in_buf, sizeof(in_buf), (unsigned short*) buf_data[curBuf], fact);
-        armDCacheFlush(buf_data[curBuf], buffer_size);
         play_buf(buffer_size, data_size);
         played++;
     }
