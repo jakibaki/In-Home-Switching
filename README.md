@@ -25,6 +25,10 @@ On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/downl
 
 On the Switch, find out its IP address and start the app with your Switch CFW. Then type in the Switch's IP address on the PC app and hit the `Connect` button.
 
+## Windows App Screenshot
+
+![PC companion app](screenshots/windowsapp.png "PC app for streaming screen")
+
 ## Screenshots from Nintendo Switch
 
 ![Track Mania](screenshots/TrackMania.jpg "Track Mania on Switch")
