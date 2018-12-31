@@ -63,11 +63,11 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ScpDriverInterface">
-      <HintPath>..\..\ScpDriverInterface.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\Users\paperspace\Desktop\ScpDriverInterface.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
