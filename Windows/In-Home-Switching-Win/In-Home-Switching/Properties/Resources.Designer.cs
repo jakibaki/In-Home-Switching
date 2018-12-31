@@ -63,16 +63,6 @@ namespace DesktopDuplication.Demo.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap InHomeSwitching {
-            get {
-                object obj = ResourceManager.GetObject("InHomeSwitching", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap InHomeSwitchingCondensed {
             get {
                 object obj = ResourceManager.GetObject("InHomeSwitchingCondensed", resourceCulture);

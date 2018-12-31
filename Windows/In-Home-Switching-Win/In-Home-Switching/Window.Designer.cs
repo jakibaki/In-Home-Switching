@@ -87,7 +87,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.toggle_button.AutoSize = true;
             this.toggle_button.Font = new System.Drawing.Font("Raleway", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.toggle_button.Location = new System.Drawing.Point(69, 141);
+            this.toggle_button.Location = new System.Drawing.Point(68, 146);
             this.toggle_button.Name = "toggle_button";
             this.toggle_button.Size = new System.Drawing.Size(200, 61);
             this.toggle_button.TabIndex = 10;
@@ -153,19 +153,20 @@
             // pictureBox1
             // 
             this.pictureBox1.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.pictureBox1.BackgroundImage = global::DesktopDuplication.Demo.Properties.Resources.InHomeSwitchingCondensed;
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.pictureBox1.Location = new System.Drawing.Point(0, 3);
+            this.pictureBox1.Location = new System.Drawing.Point(0, 2);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(335, 115);
+            this.pictureBox1.Size = new System.Drawing.Size(335, 120);
             this.pictureBox1.TabIndex = 16;
             this.pictureBox1.TabStop = false;
             // 
             // pictureBox2
             // 
             this.pictureBox2.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.pictureBox2.Location = new System.Drawing.Point(0, -31);
+            this.pictureBox2.Location = new System.Drawing.Point(0, -21);
             this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(335, 148);
+            this.pictureBox2.Size = new System.Drawing.Size(335, 84);
             this.pictureBox2.TabIndex = 17;
             this.pictureBox2.TabStop = false;
             // 
