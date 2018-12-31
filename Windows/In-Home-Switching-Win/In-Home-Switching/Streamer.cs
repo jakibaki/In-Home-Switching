@@ -14,6 +14,8 @@ namespace InHomeSwitching.Window
         public string ffmpeg_args = "-y -f rawvideo -pixel_format rgb32 -framerate 300 -video_size {0}x{1} -i pipe: -f h264 -vf scale=1280x720 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -profile:v baseline -x264-params \"nal-hrd=cbr\" -b:v {2}M -minrate {2}M -maxrate {2}M -bufsize 2M tcp://{3}:2222 ",
                       ip;
 
+        public string ffmpeg_audio_args = "-y  -f dshow  -i audio=\"virtual-audio-capturer\"  -f s16le -ar 16000 -ac 2 -c:a pcm_s16le udp://{0}:2224?pkt_size=640";
+
         public int resX, resY, quality;
 
         private Thread renderThread = null, inputThread = null;
@@ -23,6 +25,8 @@ namespace InHomeSwitching.Window
         private static DesktopDuplicator desktopDuplicator = new DesktopDuplicator(0);
 
         private Process proc = null;
+
+        private Process audioProc = null;
 
         private ScpBus scp = new ScpBus();
 
@@ -98,6 +102,10 @@ namespace InHomeSwitching.Window
             try { proc.Kill(); }
             catch { }
 
+            try { audioProc.Kill(); }
+            catch { }
+
+
             started = false;
             running = false;
         }
@@ -124,6 +132,27 @@ namespace InHomeSwitching.Window
                 try { proc.Kill(); }
                 catch { };
             }
+
+            if (audioProc != null)
+            {
+                try { audioProc.Kill(); }
+                catch { };
+            }
+
+            audioProc = new Process()
+            {
+                StartInfo = new ProcessStartInfo()
+                {
+                    FileName = "ffmpeg.exe",
+                    Arguments = string.Format(ffmpeg_audio_args, ip),
+                    UseShellExecute = false,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            audioProc.Start();
 
             proc = new Process()
             {
