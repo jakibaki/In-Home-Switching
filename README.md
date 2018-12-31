@@ -11,6 +11,7 @@ This project is fairly new, so please do not consider it totally stable. If you 
     * 720p (full Switch-Tablet display resolution)
     * 40-60 FPS (if not see Troubleshooting)
     * Low delay (again, see Troubleshooting)
+    * Audio support (experimental)
   * Capture controller input on Nintendo Switch
     * Emulate an Xbox controller on the PC
   * PC app offers picture quality adjustments
@@ -18,11 +19,11 @@ This project is fairly new, so please do not consider it totally stable. If you 
 ## How to Use
 If you do not want to build by yourself, have a look at the [releases page](https://github.com/jakibaki/In-Home-Switching/releases). There you can find an Archive with the App for the Switch as well as the corresponding PC companion app. For the PC App, just execute In-Home-Switching.exe in the Windows directory after unzipping. 
 
-On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) must also be installed (just unzip and execute `Driver Installer/ScpDriverInstaller.exe`). Otherwise the program will crash silently.
+On PC, [Scp drivers](https://github.com/mogzol/ScpDriverInterface/releases/download/1.1/ScpDriverInterface_v1.1.zip) must also be installed (just unzip and execute `Driver Installer/ScpDriverInstaller.exe`). Otherwise the program will crash silently. For audio, [Screen Capture Recorder](https://github.com/rdp/screen-capture-recorder-to-video-windows-free/releases) also needs to be installed.
 
 *Also please set your PC resolution to 1280x720p in Windows for getting **much** better performance of screen capturing while running the app.*
 
-On the Switch, find out its IP address (in the Internet settings) and start the app with your Switch CFW. Then type in the Switch's IP address on the PC app and hit the `Connect` button.
+On the Switch, find out its IP address and start the app with your Switch CFW. Then type in the Switch's IP address on the PC app and hit the `Connect` button.
 
 ## Screenshots from Nintendo Switch
 
@@ -33,7 +34,7 @@ On the Switch, find out its IP address (in the Internet settings) and start the 
 
 ## Current Limitations
   * Only works with Windows 8 (64-bit) and newer
-  * No audio support atm
+  * Audio support only experimental atm
   * No support for Switch CFW other than [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere) or [Kosmos](https://github.com/AtlasNX/Kosmos)
 
 ## Known issues
@@ -46,9 +47,7 @@ This app uses core overclocking to 1785 MHz on the Nintendo Switch. We use this 
 
 ## Scheduled for Future Releases
   * Stream PC audio to Switch
-  * Option to disable Switch Overclocking
   * MacOS and Linux Support
-  * Showing Switch IP in-app
   * Multi-controller support
   * Mouse emulation
   * More efficient threading
@@ -80,9 +79,6 @@ Well, in our tests we had 60 FPS on Windows 10 with low image quality... I guess
 We now feature nightly builds of the Switch app (always based on current master branch). They can be found [here](https://bsnx.lavatech.top/in-home-switching/).
 These builds are considered experimental, so please do not panic if something crashes sometimes ;)
 
-Right now the nightlies feature massive performance increases. You can thus use the app without overclocking (if you still want to, just change the overclocking profile in-app). 
-Additionally, the IP of the Switch is shown as well.
-
 ## License
 
 This code is licensed GPLv3 and this has a reason: We do not want to see (or read about) any parts of this project in non-open-source software (everything that is not GPLv3 licensed). Please share the notion of free code for everyone.
@@ -100,3 +96,4 @@ This code is licensed GPLv3 and this has a reason: We do not want to see (or rea
 * [Checkpoint](https://github.com/FlagBrew/Checkpoint) also for SDL examples
 * [SunTheCourier](https://github.com/SunTheCourier) for adding config support to our Windows client
 * [AveSatanas](https://gitlab.com/ao) for offering a server that automatically builds our nightlies
+* [Screen Capture Recorder](https://github.com/rdp/screen-capture-recorder-to-video-windows-free) for helping us grabbing audio
