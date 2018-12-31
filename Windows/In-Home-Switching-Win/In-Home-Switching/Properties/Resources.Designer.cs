@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace InHomeSwitching.Window.Properties {
+namespace DesktopDuplication.Demo.Properties {
     using System;
     
     
@@ -57,6 +57,26 @@ namespace InHomeSwitching.Window.Properties {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap InHomeSwitching {
+            get {
+                object obj = ResourceManager.GetObject("InHomeSwitching", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap InHomeSwitchingCondensed {
+            get {
+                object obj = ResourceManager.GetObject("InHomeSwitchingCondensed", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

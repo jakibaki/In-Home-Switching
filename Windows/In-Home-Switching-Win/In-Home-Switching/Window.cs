@@ -77,5 +77,6 @@ namespace InHomeSwitching.Window
             };
             config.Save();
         }
+
     }
 }
