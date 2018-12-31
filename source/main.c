@@ -52,10 +52,10 @@ static const SocketInitConfig socketInitConf = {
     .tcp_tx_buf_max_size = 0x400000,
     .tcp_rx_buf_max_size = 0x400000,
 
-    .udp_tx_buf_size = 0x2400,
-    .udp_rx_buf_size = 0xA500,
+    .udp_tx_buf_size = 0x1400,
+    .udp_rx_buf_size = 0x2500,
 
-    .sb_efficiency = 4,
+    .sb_efficiency = 2,
 
     .serialized_out_addrinfos_max_size = 0x1000,
     .serialized_out_hostent_max_size = 0x200,
