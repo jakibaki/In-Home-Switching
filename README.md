@@ -33,7 +33,6 @@ On the Switch, find out its IP address and start the app with your Switch CFW. T
 
 ![Track Mania](screenshots/TrackMania.jpg "Track Mania on Switch")
 ![Witcher 3](screenshots/witcher.jpg "Witcher 3 on Switch")
-![PC companion app](screenshots/PCApp.jpg "PC app for streaming screen")
 
 
 ## Current Limitations
