@@ -59,15 +59,5 @@ namespace DesktopDuplication.Demo.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap InHomeSwitchingCondensed {
-            get {
-                object obj = ResourceManager.GetObject("InHomeSwitchingCondensed", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
     }
 }
