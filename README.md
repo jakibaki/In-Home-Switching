@@ -27,7 +27,7 @@ On the Switch, find out its IP address and start the app with your Switch CFW. T
 
 ## Windows App Screenshot
 
-![PC companion app](screenshots/windowsapp.png "PC app for streaming screen")
+![PC companion app](screenshots/windowsappuiupdate.png "PC app for streaming screen")
 
 ## Screenshots from Nintendo Switch
 
