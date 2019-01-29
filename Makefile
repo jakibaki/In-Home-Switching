@@ -39,6 +39,7 @@ EXEFS_SRC	:=	exefs_src
 APP_AUTHOR := jakibaki, D-VAmpire
 APP_TITLE := In-Home-Switching
 APP_VERSION := 0.2
+ICON := icon.jpg
 
 
 
