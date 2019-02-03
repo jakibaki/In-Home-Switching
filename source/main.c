@@ -42,6 +42,7 @@
 #include "video.h"
 #include "network.h"
 #include "renderer.h"
+#include "audio.h"
 
 static const SocketInitConfig socketInitConf = {
     .bsdsockets_version = 1,
@@ -51,10 +52,10 @@ static const SocketInitConfig socketInitConf = {
     .tcp_tx_buf_max_size = 0x400000,
     .tcp_rx_buf_max_size = 0x400000,
 
-    .udp_tx_buf_size = 0xA2400,
-    .udp_rx_buf_size = 0xAA500,
+    .udp_tx_buf_size = 0x1400,
+    .udp_rx_buf_size = 0x2500,
 
-    .sb_efficiency = 4,
+    .sb_efficiency = 2,
 
     .serialized_out_addrinfos_max_size = 0x1000,
     .serialized_out_hostent_max_size = 0x200,
@@ -70,10 +71,15 @@ void switchInit()
     romfsInit();
     //gfxInitDefault();
     networkInit(&socketInitConf);
+
+    audoutInitialize();
+    audoutStartAudioOut();
 }
 
 void switchDestroy()
 {
+    audoutStopAudioOut();
+    audoutExit();
     networkDestroy();
     gfxExit();
     pcvExit();
@@ -83,8 +89,16 @@ void switchDestroy()
 void startInput()
 {
     static Thread inputHandlerThread;
-    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 1);
+    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 0);
     threadStart(&inputHandlerThread);
+}
+
+void startAudio()
+{
+    static Thread audioHandlerThread;
+    // On same thread as input and preemptive
+    Result res = threadCreate(&audioHandlerThread, audioHandlerLoop, NULL, 0x10000, 0x20, 1);
+    threadStart(&audioHandlerThread);
 }
 
 void startRender(VideoContext *videoContext)
@@ -105,10 +119,14 @@ int main(int argc, char **argv)
     videoContext = createVideoContext();
     videoContext->renderContext = renderContext;
 
+    /* Run audio handling in background */
+    startAudio();
+
+    startRender(videoContext);
+
     /* Run input handling in background */
     startInput();
 
-    startRender(videoContext);
 
     while (appletMainLoop())
     {

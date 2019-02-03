@@ -190,8 +190,8 @@ int handleVid(VideoContext *context)
     // setting TCP input options
     AVDictionary *opts = 0;
     av_dict_set(&opts, "listen", "1", 0); // set option for listening
-    av_dict_set(&opts, "probesize", "10000", 0);
-    //av_dict_set(&opts, "recv_buffer_size", TCP_RECV_BUFFER, 0);       // set option for size of receive buffer
+    av_dict_set(&opts, "probesize", "50000", 0);
+//    av_dict_set(&opts, "recv_buffer_size", "5000", 0);       // set option for size of receive buffer
 
     //open input file, and allocate format context
     ret = avformat_open_input(&fmt_ctx, URL, 0, &opts);

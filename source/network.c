@@ -11,6 +11,7 @@
 
 void networkInit(const SocketInitConfig* conf) 
 {
+    //socketInitializeDefault();
     socketInitialize(conf);
     nxlinkStdio();
     avformat_network_init();

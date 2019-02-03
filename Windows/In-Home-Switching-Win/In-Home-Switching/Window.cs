@@ -57,6 +57,10 @@ namespace InHomeSwitching.Window
 
         private void Window_FormClosed(object sender, FormClosedEventArgs e)
         {
+            if(streamer != null)
+            {
+                streamer.Stop();
+            }
             SaveConfig();
             Environment.Exit(0);
         }
