@@ -69,7 +69,6 @@ void switchInit()
     pcvInitialize();
 
     romfsInit();
-    //gfxInitDefault();
     networkInit(&socketInitConf);
 
     audoutInitialize();
@@ -81,7 +80,6 @@ void switchDestroy()
     audoutStopAudioOut();
     audoutExit();
     networkDestroy();
-    gfxExit();
     pcvExit();
     plExit();
 }
@@ -97,7 +95,7 @@ void startAudio()
 {
     static Thread audioHandlerThread;
     // On same thread as input and preemptive
-    Result res = threadCreate(&audioHandlerThread, audioHandlerLoop, NULL, 0x10000, 0x20, 1);
+    threadCreate(&audioHandlerThread, audioHandlerLoop, NULL, 0x10000, 0x20, 1);
     threadStart(&audioHandlerThread);
 }
 

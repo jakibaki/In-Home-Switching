@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include "video.h"
 
-void flushSwapBuffers(void);
 
 static char *clock_strings[] = {
     "333 MHz (underclocked, very slow)", "710 MHz (underclocked, slow)", "1020 MHz (standard, not overclocked)", "1224 MHz (slightly overclocked)", "1581 MHz (overclocked)", "1785 MHz (strong overclock)"};
@@ -64,7 +63,7 @@ RenderContext *createRenderer()
 
 void applyOC(RenderContext *context)
 {
-    pcvSetClockRate(PcvModule_Cpu, clock_rates[context->overclock_status]);
+    pcvSetClockRate(PcvModule_CpuBus, clock_rates[context->overclock_status]);
 }
 
 void setFrameAvail(RenderContext *context)
@@ -99,17 +98,6 @@ void setVideoActive(RenderContext *context, bool active)
     context->video_active = active;
     mutexUnlock(&context->video_active_mut);
 }
-
-/*
-void drawSplash(RenderContext *context, const char *splashPath)
-{
-    FILE *img = fopen(splashPath, "rb");
-    context->gfxBuffer = gfxGetFramebuffer(NULL, NULL);
-    fread(context->gfxBuffer, RESX * RESY * 4, 1, img);
-    fclose(img);
-    flushSwapBuffers();
-}
-*/
 
 void SDL_ClearScreen(RenderContext *context, SDL_Color colour)
 {
@@ -199,12 +187,6 @@ void displayFrame(RenderContext *renderContext)
 
     SDL_RenderCopy(renderContext->renderer, renderContext->yuv_text, NULL, NULL);
     SDL_RenderPresent(renderContext->renderer);
-}
-
-void flushSwapBuffers()
-{
-    gfxFlushBuffers();
-    gfxSwapBuffers();
 }
 
 void freeRenderer(RenderContext *context)
