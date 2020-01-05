@@ -1,5 +1,6 @@
 #include "renderer.h"
 
+#include <stdbool.h>
 #include <switch.h>
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
@@ -15,18 +16,15 @@ static int clock_rates[] = {
 
 RenderContext *createRenderer()
 {
-    RenderContext *context = (RenderContext *)malloc(sizeof(RenderContext));
+    RenderContext *context = malloc(sizeof(RenderContext));
 
     context->window = SDL_CreateWindow("sdl2_gles2", 0, 0, RESX, RESY, SDL_WINDOW_FULLSCREEN);
     if (context->window == NULL)
     {
         SDL_Log("SDL_CreateWindow: %s\n", SDL_GetError());
         SDL_Quit();
-        while (1)
-            ;
+        while (1);
     }
-    
-    //SDL_SetWindowDisplayMode(context->window, &mode);
 
     context->renderer = SDL_CreateRenderer(context->window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (context->renderer == NULL)
@@ -116,7 +114,7 @@ void drawSplash(RenderContext *context)
     char str_buf[300];
     snprintf(str_buf, 300, "Your Switch is now ready for a PC to connect!\nIt has the IP-Address %u.%u.%u.%u\n"
                            "\nInstructions can be found here:"
-                           "\nhttps://bit.ly/2QrR1Lb"
+                           "\nhttps://github.com/jakibaki/In-Home-Switching/blob/master/README.md"
                            "\n\nOverclock status:\n%s"
                            "\nPress X to increase, Y to decrease clockrate",
              ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF,
