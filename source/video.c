@@ -46,7 +46,6 @@ VideoContext *createVideoContext()
 void freeVideoContext(VideoContext *context)
 {
     avcodec_free_context(&(context->video_dec_ctx));
-    //avcodec_free_context(&audio_dec_ctx);
     avformat_close_input(&(context->fmt_ctx));
     av_frame_free(&(context->frame));
     av_free(context->video_dst_data[0]);
@@ -191,7 +190,6 @@ int handleVid(VideoContext *context)
     AVDictionary *opts = 0;
     av_dict_set(&opts, "listen", "1", 0); // set option for listening
     av_dict_set(&opts, "probesize", "50000", 0);
-//    av_dict_set(&opts, "recv_buffer_size", "5000", 0);       // set option for size of receive buffer
 
     //open input file, and allocate format context
     ret = avformat_open_input(&fmt_ctx, URL, 0, &opts);
@@ -262,7 +260,8 @@ int handleVid(VideoContext *context)
                 break;
             pkt.data += ret;
             pkt.size -= ret;
-        } while (pkt.size > 0);
+        }
+        while (pkt.size > 0);
         av_packet_unref(&orig_pkt);
     }
 
@@ -272,7 +271,8 @@ int handleVid(VideoContext *context)
     do
     {
         decode_packet(context, &got_frame, &pkt);
-    } while (got_frame);
+    }
+    while (got_frame);
 
     printf("Stream finished.\n");
     checkFrameAvail(context->renderContext);

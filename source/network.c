@@ -11,7 +11,6 @@
 
 void networkInit(const SocketInitConfig* conf) 
 {
-    //socketInitializeDefault();
     socketInitialize(conf);
     nxlinkStdio();
     avformat_network_init();
@@ -70,7 +69,8 @@ int connectJoyConSocket(JoyConSocket* connection, int port)
         struct sockaddr_in client;
         int c = sizeof(struct sockaddr_in);
         connection->sock = accept(connection->lissock, (struct sockaddr *)&client, (socklen_t *)&c);
-        if(connection->sock < 0) {
+        if (connection->sock < 0)
+        {
             close(connection->lissock);
             connection->sock = -1;
             connection->lissock = -1;

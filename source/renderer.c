@@ -31,8 +31,7 @@ RenderContext *createRenderer()
     {
         SDL_Log("SDL_CreateRenderer: %s\n", SDL_GetError());
         SDL_Quit();
-        while (1)
-            ;
+        while (1);
     }
 
     context->yuv_text = SDL_CreateTexture(context->renderer, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, RESX, RESY);
@@ -149,7 +148,7 @@ void drawSplash(RenderContext *context)
     }
 }
 
-u64 old_time, new_time;
+u64 old_time = 0, new_time = 0;
 void handleFrame(RenderContext *renderContext, VideoContext *videoContext)
 {
     AVFrame *frame = videoContext->frame;
