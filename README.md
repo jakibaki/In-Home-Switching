@@ -1,3 +1,6 @@
+# This project is not maintained right now. 
+## It might be revived in the future but for now check out this fork: https://github.com/DevL0rd/SkyNX
+
 # In-Home-Switching
 
 This is a homebrew that enables streaming of PC games to the Nintendo Switch.
