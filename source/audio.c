@@ -28,7 +28,7 @@ void diep(char *s)
 
 int setup_socket()
 {
-    struct sockaddr_in si_me, si_other;
+    struct sockaddr_in si_me;
     int s;
 
     if ((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
@@ -72,10 +72,6 @@ void play_buf(int buffer_size, int data_size)
     swapbuf;
 }
 
-#define MIN_LEFT_SOCK 2000 // TODO: Tweak those
-#define MAX_LEFT_SOCK 5000
-char bs_buf[MAX_LEFT_SOCK];
-
 // out_buf has to be in_buf_size*fact*2 big
 void resample(unsigned short *in_buf, int in_buf_size, unsigned short *out_buf, int fact)
 {
@@ -95,19 +91,17 @@ void resample(unsigned short *in_buf, int in_buf_size, unsigned short *out_buf, 
     }
 }
 
+#define DATA_SIZE   1920 //(SAMPLECOUNT * CHANNELCOUNT * BYTESPERSAMPLE);
+#define IN_RATE     160000  // Bitrate.
+#define OUT_RATE    480000  // Bitrate.
+#define FACT        (OUT_RATE / IN_RATE)
+#define IN_BUFSIZE  (DATA_SIZE / FACT)
+
 void audioHandlerLoop()
 {
+    char in_buf[IN_BUFSIZE] = {0};
 
-
-    u32 data_size = 1920; //(SAMPLECOUNT * CHANNELCOUNT * BYTESPERSAMPLE);
-
-    int inrate = 16000;
-    int outrate = 48000;
-
-    int fact = outrate/inrate;
-    char in_buf[data_size/fact];
-
-    u32 buffer_size = (data_size + 0xfff) & ~0xfff;
+    u32 buffer_size = (DATA_SIZE + 0xfff) & ~0xfff;
 
     for (int curBuf = 0; curBuf < BUF_COUNT; curBuf++)
     {
@@ -119,8 +113,8 @@ void audioHandlerLoop()
     int played = 0;
     while (1)
     {
-        struct sockaddr_in si_other;
-        int slen = sizeof si_other;
+        struct sockaddr si_other;
+        socklen_t slen = sizeof(si_other);
         int ret = recvfrom(sock, in_buf, sizeof(in_buf), 0, &si_other, &slen);
 
         if (ret < 0)
@@ -133,14 +127,10 @@ void audioHandlerLoop()
             printf("Bad input %d\n", ret);
             
             continue;
-            // This may or may not be bad
-
-            //printf("not %d big! %d\n", data_size, ret);
-            //continue;
         }
 
-        resample((unsigned short*) in_buf, sizeof(in_buf), (unsigned short*) buf_data[curBuf], fact);
-        play_buf(buffer_size, data_size);
+        resample((unsigned short*) in_buf, sizeof(in_buf), (unsigned short*) buf_data[curBuf], FACT);
+        play_buf(buffer_size, DATA_SIZE);
         played++;
     }
 

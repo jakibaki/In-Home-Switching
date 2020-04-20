@@ -56,11 +56,6 @@ static const SocketInitConfig socketInitConf = {
     .udp_rx_buf_size = 0x2500,
 
     .sb_efficiency = 2,
-
-    .serialized_out_addrinfos_max_size = 0x1000,
-    .serialized_out_hostent_max_size = 0x200,
-    .bypass_nsd = false,
-    .dns_timeout = 0,
 };
 
 void switchInit()
@@ -87,7 +82,7 @@ void switchDestroy()
 void startInput()
 {
     static Thread inputHandlerThread;
-    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, 0x1000, 0x2b, 0);
+    threadCreate(&inputHandlerThread, inputHandlerLoop, NULL, NULL, 0x1000, 0x2b, 0);
     threadStart(&inputHandlerThread);
 }
 
@@ -95,14 +90,14 @@ void startAudio()
 {
     static Thread audioHandlerThread;
     // On same thread as input and preemptive
-    threadCreate(&audioHandlerThread, audioHandlerLoop, NULL, 0x10000, 0x20, 1);
+    threadCreate(&audioHandlerThread, audioHandlerLoop, NULL, NULL, 0x10000, 0x20, 1);
     threadStart(&audioHandlerThread);
 }
 
 void startRender(VideoContext *videoContext)
 {
     static Thread renderThread;
-    threadCreate(&renderThread, videoLoop, videoContext, 0x1000000, 0x2b, 2);
+    threadCreate(&renderThread, videoLoop, videoContext, NULL, 0x800000, 0x2b, 2);
     threadStart(&renderThread);
 }
 

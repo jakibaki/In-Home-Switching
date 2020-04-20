@@ -25,14 +25,14 @@ void gamePadSend(JoyConSocket* connection)
 
 void handleInput(JoyConSocket* connection)
 {
-    if(connectJoyConSocket(connection, 2223))
+    if (connectJoyConSocket(connection, 2223))
         gamePadSend(connection);
 }
 
 void inputHandlerLoop(void* dummy)
 {
     JoyConSocket* connection = createJoyConSocket();
-    while(appletMainLoop())
+    while (appletMainLoop())
     {
         handleInput(connection);
         svcSleepThread(23333333);
